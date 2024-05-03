@@ -7,6 +7,18 @@
 
 import cv2
 import numpy as np
+from typing import Callable
+
+
+def invert_colors_for_processing(processing_func:Callable) -> Callable:
+    '''Decorator function to invert pixel values, call processing function, then invert pixel values back to original.'''
+    def wrapper_function(self, *args, **kwargs) -> None:
+        self.ImageData = cv2.bitwise_not(self.ImageData)
+        self.InvertedColor = True
+        processing_func(self, *args, **kwargs)
+        self.ImageData = cv2.bitwise_not(self.ImageData)
+        self.InvertedColor = False
+    return wrapper_function
 
 class ImageToProcess():
     '''Object representing an image file to be processed to improve readability for Tesseract OCR.'''
@@ -16,15 +28,10 @@ class ImageToProcess():
             Processes image to improve readability for Tesseract OCR.
             Arguments:
                 - image_path : path to image being processed
-                - covert_grayscale : if true, will convert image to grayscale
-                - remove_noise : if true, will remove noise from the image
-                - threshold : if true, will extract only pixels over the threshold value
-                - dilate : if true, will increase the boundaries of foreground pixels
-                - erode : if true, will decrease the boundaries of foreground pixels
-                - canny_edge : if true, will invert color scheme and outline object boundaries
         '''
         self._image_path:str = image_path
         self._image_data:cv2.typing.MatLike = cv2.imread(image_path)
+        self._inverted_color:bool = False
 
     @property
     def ImagePath(self) -> str:
@@ -36,6 +43,13 @@ class ImageToProcess():
     @ImageData.setter
     def ImageData(self, new_data_value):
         self._image_data = new_data_value
+
+    @property
+    def InvertedColor(self) -> bool:
+        return self._inverted_color
+    @InvertedColor.setter
+    def InvertedColor(self, bool_value:bool) -> None:
+        self._inverted_color = bool_value
 
     def __str__(self) -> str:
         return f'\n    Image Path : {self.ImagePath}\n'
@@ -165,6 +179,7 @@ class ImageToProcess():
         '''
         self.ImageData = cv2.threshold(self.ImageData, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
 
+    @invert_colors_for_processing
     def dilate(self, kernel_size:int=5, iterations:int=1) -> None:
         '''
             ! USEFUL TO DILATE AFTER ERODING !
@@ -173,9 +188,11 @@ class ImageToProcess():
                 - kernel_size : area of pixels to calculate algorithm within
                 - iterations : number of iterations to run
         '''
-        if kernel_size % 2 != 1:
+        if not self.InvertedColor:
+            raise InvalidDilateOrErodeArguments('Image must be inverted for dilate to work well!', self.ImagePath)
+        elif kernel_size % 2 != 1:
             raise InvalidDilateOrErodeArguments('Blur kernel size must be odd!', self.ImagePath)
-        if kernel_size > 9:
+        elif kernel_size > 9:
             raise InvalidDilateOrErodeArguments('Size of neighborhood cannot be greater than 9!', self.ImagePath)
         elif iterations >= 5:
             raise InvalidDilateOrErodeArguments('Number of iterations cannot be greater than or equal to 5!', self.ImagePath)
@@ -183,6 +200,7 @@ class ImageToProcess():
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
             self.ImageData = cv2.dilate(self.ImageData, kernel, iterations=iterations)
 
+    @invert_colors_for_processing
     def erode(self, kernel_size:int=5, iterations:int=1) -> None:
         '''
             ! USEFUL TO DILATE AFTER ERODING !
@@ -191,9 +209,11 @@ class ImageToProcess():
                 - kernel_size : area of pixels to calculate algorithm within
                 - iterations : number of iterations to run
         '''
-        if kernel_size % 2 != 1:
+        if not self.InvertedColor:
+            raise InvalidDilateOrErodeArguments('Image must be inverted for erode to work well!', self.ImagePath)
+        elif kernel_size % 2 != 1:
             raise InvalidDilateOrErodeArguments('Blur kernel size must be odd!', self.ImagePath)
-        if kernel_size > 9:
+        elif kernel_size > 9:
             raise InvalidDilateOrErodeArguments('Size of neighborhood cannot be greater than 9!', self.ImagePath)
         elif iterations >= 5:
             raise InvalidDilateOrErodeArguments('Number of iterations cannot be greater than or equal to 5!', self.ImagePath)
@@ -201,6 +221,39 @@ class ImageToProcess():
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
             self.ImageData = cv2.erode(self.ImageData, kernel, iterations=iterations)
 
+    @invert_colors_for_processing
+    def open_pixels(self, kernel_size:int=3) -> None:
+        '''
+            Erosion followed by dilation. Useful in removing noise.
+            Arguments:
+                - kernel_size : area of pixels to calculate algorithm within
+        '''
+        if not self.InvertedColor:
+            raise InvalidDilateOrErodeArguments('Image must be inverted for opening to work well!', self.ImagePath)
+        elif kernel_size % 2 != 1:
+            raise InvalidDilateOrErodeArguments('Blur kernel size must be odd!', self.ImagePath)
+        elif kernel_size > 9:
+            raise InvalidDilateOrErodeArguments('Size of neighborhood cannot be greater than 9!', self.ImagePath)
+        else:
+            kernel = np.ones((kernel_size, kernel_size), np.uint8)
+            self.ImageData = cv2.morphologyEx(self.ImageData, cv2.MORPH_OPEN, kernel)
+
+    @invert_colors_for_processing
+    def close_pixels(self, kernel_size:int=3) -> None:
+        '''
+            Dilation followed by erosion. Useful in closing small holse inside foreground objects.
+            Arguments:
+                - kernel_size : area of pixels to calculate algorithm within
+        '''
+        if not self.InvertedColor:
+            raise InvalidDilateOrErodeArguments('Image must be inverted for closing to work well!', self.ImagePath)
+        elif kernel_size % 2 != 1:
+            raise InvalidDilateOrErodeArguments('Blur kernel size must be odd!', self.ImagePath)
+        elif kernel_size > 9:
+            raise InvalidDilateOrErodeArguments('Size of neighborhood cannot be greater than 9!', self.ImagePath)
+        else:
+            kernel = np.ones((kernel_size, kernel_size), np.uint8)
+            self.ImageData = cv2.morphologyEx(self.ImageData, cv2.MORPH_CLOSE, kernel)
 
 # error handling definitions
 
@@ -266,20 +319,6 @@ class InvalidDilateOrErodeArguments(Exception):
         formatted_error_message = format_exception_new_lines(self, error_message, image_to_process_path)
         super().__init__(formatted_error_message)
 
-def best_result_so_far() -> cv2.typing.MatLike:
-    test = ImageToProcess(image_path='recipe_card.jpeg')
-    test.enlarge_image_size(scale_x=2, scale_y=2)
-    test.convert_to_grayscale()
-    test.median_blur()
-    test.otsu_threshold()
-    test.adaptive_threshold()
-    test.erode()
-    cv2.imshow('test', test.ImageData)
-    cv2.waitKey(0)
-    cv2.imwrite('test.png', test.ImageData)
-    return test
-
-
 def main():
     test = ImageToProcess(image_path='recipe_card.jpeg')
     test.enlarge_image_size(scale_x=2, scale_y=2)
@@ -288,7 +327,7 @@ def main():
     test.otsu_threshold()
     test.adaptive_threshold()
     test.erode()
-    # test.dilate()
+    test.dilate()
     cv2.imshow('test', test.ImageData)
     cv2.waitKey(0)
     cv2.imwrite('dilate.png', test.ImageData)
