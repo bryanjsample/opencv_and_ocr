@@ -1,0 +1,1150 @@
+Confidence: 95
+Text:  
+
+Confidence: 96
+Text: JAPANESE
+
+Confidence: 92
+Text: CHICKEN
+
+Confidence: 92
+Text: YAKITORI
+
+Confidence: 96
+Text: With
+
+Confidence: 96
+Text: Baby
+
+Confidence: 96
+Text: Bok
+
+Confidence: 96
+Text: Choy
+
+Confidence: 96
+Text: Slaw
+
+Confidence: 96
+Text: INGREDIENTS
+
+Confidence: 96
+Text: WHAT
+
+Confidence: 96
+Text: YOU
+
+Confidence: 96
+Text: NEED
+
+Confidence: 96
+Text: 367
+
+Confidence: 96
+Text: calories
+
+Confidence: 96
+Text: per
+
+Confidence: 96
+Text: serving
+
+Confidence: 77
+Text: Slaw
+
+Confidence: 95
+Text: Mix
+
+Confidence: 92
+Text: (2%
+
+Confidence: 72
+Text: 02)
+
+Confidence: 96
+Text: Salt
+
+Confidence: 94
+Text: 40
+
+Confidence: 96
+Text: minutes
+
+Confidence: 95
+Text: to
+
+Confidence: 96
+Text: prepare
+
+Confidence: 66
+Text: Mirin
+
+Confidence: 80
+Text: (1%
+
+Confidence: 94
+Text: Tbsp.)
+
+Confidence: 87
+Text: Black
+
+Confidence: 90
+Text: Pepper
+
+Confidence: 84
+Text: Skewers
+
+Confidence: 96
+Text: (6)
+
+Confidence: 79
+Text: =
+
+Confidence: 68
+Text: Cooking
+
+Confidence: 96
+Text: Spray
+
+Confidence: 74
+Text: »
+
+Confidence: 91
+Text: Sesame
+
+Confidence: 96
+Text: Seeds
+
+Confidence: 96
+Text: (2
+
+Confidence: 96
+Text: Tsp.)
+
+Confidence: 67
+Text: Grill
+
+Confidence: 67
+Text: or
+
+Confidence: 96
+Text: Grill
+
+Confidence: 96
+Text: Pan
+
+Confidence: 64
+Text: =
+
+Confidence: 68
+Text: Cilantro
+
+Confidence: 92
+Text: Sprigs
+
+Confidence: 96
+Text: (4)
+
+Confidence: 65
+Text: Lime
+
+Confidence: 95
+Text: (1)
+
+Confidence: 96
+Text: DRINK
+
+Confidence: 96
+Text: PAIRING
+
+Confidence: 86
+Text: *
+
+Confidence: 59
+Text: Baby
+
+Confidence: 97
+Text: Bok
+
+Confidence: 96
+Text: Choy
+
+Confidence: 96
+Text: (2
+
+Confidence: 96
+Text: Heads)
+
+Confidence: 56
+Text: Chilled
+
+Confidence: 92
+Text: Japanese-Style
+
+Confidence: 96
+Text: Lager,
+
+Confidence: 96
+Text: like
+
+Confidence: 82
+Text: =
+
+Confidence: 77
+Text: Soy
+
+Confidence: 95
+Text: Sauce
+
+Confidence: 96
+Text: (1
+
+Confidence: 96
+Text: Sapporo
+
+Confidence: 52
+Text: *
+
+Confidence: 83
+Text: Brown
+
+Confidence: 96
+Text: Sugar
+
+Confidence: 94
+Text: (1%
+
+Confidence: 96
+Text: Tbsp.)
+
+Confidence: 72
+Text: =
+
+Confidence: 79
+Text: Cold
+
+Confidence: 96
+Text: Sake
+
+Confidence: 67
+Text: Chicken
+
+Confidence: 96
+Text: Breasts
+
+Confidence: 96
+Text: (2)
+
+Confidence: 62
+Text: Iced
+
+Confidence: 96
+Text: Green
+
+Confidence: 96
+Text: Tea
+
+Confidence: 96
+Text: with
+
+Confidence: 96
+Text: Mint
+
+Confidence: 95
+Text:    
+
+Confidence: 57
+Text: 4
+
+Confidence: 96
+Text: PREPARE
+
+Confidence: 95
+Text: THE
+
+Confidence: 95
+Text: VEGETABLES
+
+Confidence: 96
+Text: MARINATE
+
+Confidence: 96
+Text: THE
+
+Confidence: 95
+Text: CHICKEN
+
+Confidence: 96
+Text: MAKE
+
+Confidence: 95
+Text: THE
+
+Confidence: 96
+Text: SLAW
+
+Confidence: 96
+Text: Rinse
+
+Confidence: 96
+Text: bok
+
+Confidence: 96
+Text: choy
+
+Confidence: 96
+Text: and
+
+Confidence: 96
+Text: remove
+
+Confidence: 96
+Text: the
+
+Confidence: 96
+Text: root.
+
+Confidence: 94
+Text: Julienne
+
+Confidence: 71
+Text: the
+
+Confidence: 60
+Text: =
+
+Confidence: 92
+Text: mixing
+
+Confidence: 95
+Text: bowl,
+
+Confidence: 96
+Text: combine
+
+Confidence: 96
+Text: the
+
+Confidence: 96
+Text: soy
+
+Confidence: 96
+Text: sauce,
+
+Confidence: 64
+Text: Inaseparate
+
+Confidence: 96
+Text: mixing
+
+Confidence: 95
+Text: bowl,
+
+Confidence: 96
+Text: combine
+
+Confidence: 97
+Text: the
+
+Confidence: 94
+Text: slaw
+
+Confidence: 96
+Text: remaining
+
+Confidence: 96
+Text: white
+
+Confidence: 96
+Text: part
+
+Confidence: 96
+Text: and
+
+Confidence: 96
+Text: leaves.
+
+Confidence: 96
+Text: half
+
+Confidence: 96
+Text: the
+
+Confidence: 96
+Text: brown
+
+Confidence: 96
+Text: sugar,
+
+Confidence: 96
+Text: and
+
+Confidence: 96
+Text: half
+
+Confidence: 93
+Text: the
+
+Confidence: 84
+Text: mirin.
+
+Confidence: 94
+Text: mix,
+
+Confidence: 97
+Text: bok
+
+Confidence: 96
+Text: choy,
+
+Confidence: 94
+Text: half
+
+Confidence: 95
+Text: the
+
+Confidence: 96
+Text: cilantro,
+
+Confidence: 93
+Text: remaining
+
+Confidence: 92
+Text: mirin,
+
+Confidence: 96
+Text: remaining
+
+Confidence: 96
+Text: brown
+
+Confidence: 96
+Text: sugar,
+
+Confidence: 95
+Text: juice
+
+Confidence: 96
+Text: of
+
+Confidence: 96
+Text: the
+
+Confidence: 96
+Text: lime
+
+Confidence: 96
+Text: to
+
+Confidence: 96
+Text: ensuring
+
+Confidence: 82
+Text: they're
+
+Confidence: 96
+Text: completely
+
+Confidence: 96
+Text: coated,
+
+Confidence: 96
+Text: and
+
+Confidence: 96
+Text: allow
+
+Confidence: 96
+Text: taste
+
+Confidence: 95
+Text: (add
+
+Confidence: 94
+Text: juice
+
+Confidence: 96
+Text: from
+
+Confidence: 94
+Text: a
+
+Confidence: 94
+Text: quarter
+
+Confidence: 94
+Text: at
+
+Confidence: 94
+Text: a
+
+Confidence: 96
+Text: time
+
+Confidence: 96
+Text: to
+
+Confidence: 96
+Text: to
+
+Confidence: 96
+Text: marinate
+
+Confidence: 96
+Text: for
+
+Confidence: 96
+Text: 15
+
+Confidence: 95
+Text: minutes.
+
+Confidence: 96
+Text: gauge
+
+Confidence: 93
+Text: desired
+
+Confidence: 93
+Text: tartness),
+
+Confidence: 96
+Text: and
+
+Confidence: 96
+Text: half
+
+Confidence: 96
+Text: the
+
+Confidence: 96
+Text: sesame
+
+Confidence: 72
+Text: =
+
+Confidence: 95
+Text: Rinse
+
+Confidence: 95
+Text: the
+
+Confidence: 96
+Text: chicken,
+
+Confidence: 96
+Text: pat
+
+Confidence: 96
+Text: dry,
+
+Confidence: 96
+Text: and
+
+Confidence: 96
+Text: cut
+
+Confidence: 92
+Text: into
+
+Confidence: 89
+Text: 1-inch
+
+Confidence: 96
+Text: seeds.
+
+Confidence: 96
+Text: pieces.
+
+Confidence: 92
+Text: Submerge
+
+Confidence: 96
+Text: skewers
+
+Confidence: 96
+Text: in
+
+Confidence: 96
+Text: water
+
+Confidence: 96
+Text: for
+
+Confidence: 96
+Text: 5
+
+Confidence: 96
+Text: minutes
+
+Confidence: 97
+Text: before
+
+Confidence: 96
+Text: using
+
+Confidence: 96
+Text: (this
+
+Confidence: 96
+Text: prevents
+
+Confidence: 96
+Text: them
+
+Confidence: 96
+Text: from
+
+Confidence: 94
+Text: burning).
+
+Confidence: 96
+Text: Rinse
+
+Confidence: 96
+Text: the
+
+Confidence: 95
+Text: cilantro
+
+Confidence: 95
+Text: and
+
+Confidence: 96
+Text: remove
+
+Confidence: 96
+Text: leaves
+
+Confidence: 95
+Text: Place
+
+Confidence: 94
+Text: the
+
+Confidence: 94
+Text: chicken
+
+Confidence: 96
+Text: pieces
+
+Confidence: 96
+Text: in
+
+Confidence: 96
+Text: the
+
+Confidence: 96
+Text: marinade,
+
+Confidence: 93
+Text: =
+
+Confidence: 93
+Text: Rinse
+
+Confidence: 96
+Text: and
+
+Confidence: 96
+Text: quarter
+
+Confidence: 96
+Text: the
+
+Confidence: 96
+Text: lime
+
+Confidence: 96
+Text: Mix
+
+Confidence: 96
+Text: and
+
+Confidence: 96
+Text: add
+
+Confidence: 96
+Text: salt
+
+Confidence: 96
+Text: and
+
+Confidence: 96
+Text: pepper
+
+Confidence: 96
+Text: to
+
+Confidence: 96
+Text: taste.
+
+Confidence: 64
+Text: =
+
+Confidence: 93
+Text: Let
+
+Confidence: 93
+Text: sit
+
+Confidence: 96
+Text: at
+
+Confidence: 95
+Text: room
+
+Confidence: 95
+Text: temperature
+
+Confidence: 96
+Text: before
+
+Confidence: 96
+Text: serving.
+
+Confidence: 95
+Text:     
+
+Confidence: 95
+Text:  
+
+Confidence: 96
+Text: PREPARE
+
+Confidence: 96
+Text: THE
+
+Confidence: 96
+Text: SKEWERS
+
+Confidence: 96
+Text: COOK
+
+Confidence: 95
+Text: THE
+
+Confidence: 96
+Text: CHICKEN
+
+Confidence: 96
+Text: PLATE
+
+Confidence: 96
+Text: THE
+
+Confidence: 96
+Text: DISH
+
+Confidence: 72
+Text: »
+
+Confidence: 96
+Text: Warm
+
+Confidence: 96
+Text: the
+
+Confidence: 96
+Text: grill
+
+Confidence: 95
+Text: pan
+
+Confidence: 93
+Text: or
+
+Confidence: 93
+Text: grill
+
+Confidence: 93
+Text: (or
+
+Confidence: 93
+Text: if
+
+Confidence: 64
+Text: Adda
+
+Confidence: 64
+Text: serving
+
+Confidence: 96
+Text: of
+
+Confidence: 95
+Text: slaw
+
+Confidence: 96
+Text: to
+
+Confidence: 95
+Text: the
+
+Confidence: 95
+Text: plate.
+
+Confidence: 94
+Text: grill,
+
+Confidence: 94
+Text: you
+
+Confidence: 96
+Text: can
+
+Confidence: 96
+Text: use
+
+Confidence: 96
+Text: a
+
+Confidence: 94
+Text: skillet)
+
+Confidence: 94
+Text: to
+
+Confidence: 96
+Text: medium-high
+
+Confidence: 96
+Text: heat.
+
+Confidence: 80
+Text: =
+
+Confidence: 95
+Text: Nestle
+
+Confidence: 95
+Text: 2-3
+
+Confidence: 96
+Text: skewers
+
+Confidence: 96
+Text: against
+
+Confidence: 96
+Text: the
+
+Confidence: 96
+Text: slaw.
+
+Confidence: 60
+Text: *
+
+Confidence: 89
+Text: Spray
+
+Confidence: 92
+Text: grill
+
+Confidence: 94
+Text: with
+
+Confidence: 96
+Text: cooking
+
+Confidence: 96
+Text: spray
+
+Confidence: 96
+Text: to
+
+Confidence: 96
+Text: ensure
+
+Confidence: 96
+Text: Garnish
+
+Confidence: 96
+Text: with
+
+Confidence: 96
+Text: remaining
+
+Confidence: 96
+Text: sesame
+
+Confidence: 96
+Text: seeds,
+
+Confidence: 96
+Text: do
+
+Confidence: 96
+Text: not
+
+Confidence: 96
+Text: stick.
+
+Confidence: 96
+Text: remaining
+
+Confidence: 96
+Text: cilantro
+
+Confidence: 96
+Text: leaves,
+
+Confidence: 96
+Text: and
+
+Confidence: 96
+Text: any
+
+Confidence: 96
+Text: remaining
+
+Confidence: 95
+Text: lime
+
+Confidence: 96
+Text: wedges.
+
+Confidence: 95
+Text:  
+
+Confidence: 78
+Text: Once
+
+Confidence: 96
+Text: chicken
+
+Confidence: 96
+Text: pieces
+
+Confidence: 96
+Text: have
+
+Confidence: 96
+Text: marinated,
+
+Confidence: 96
+Text: spear
+
+Confidence: 96
+Text: 3-4
+
+Confidence: 96
+Text: pieces
+
+Confidence: 96
+Text: on
+
+Confidence: 96
+Text: each
+
+Confidence: 96
+Text: skewer.
+
+Confidence: 94
+Text: Once
+
+Confidence: 94
+Text: hot,
+
+Confidence: 96
+Text: add
+
+Confidence: 96
+Text: chicken
+
+Confidence: 96
+Text: skewers
+
+Confidence: 96
+Text: to
+
+Confidence: 95
+Text: grill
+
+Confidence: 96
+Text: and
+
+Confidence: 96
+Text: cook
+
+Confidence: 89
+Text: oneach
+
+Confidence: 96
+Text: side,
+
+Confidence: 95
+Text: flipping
+
+Confidence: 96
+Text: occasionally,
+
+Confidence: 96
+Text: for
+
+Confidence: 96
+Text: 4-5
+
+Confidence: 95
+Text: minutes,
+
+Confidence: 96
+Text: or
+
+Confidence: 96
+Text: until
+
+Confidence: 96
+Text: caramelized
+
+Confidence: 96
+Text: and
+
+Confidence: 92
+Text: firm.
+
+Confidence: 56
+Text: =
+
+Confidence: 96
+Text: Cut
+
+Confidence: 96
+Text: into
+
+Confidence: 95
+Text: chicken
+
+Confidence: 96
+Text: to
+
+Confidence: 91
+Text: ensure
+
+Confidence: 91
+Text: doneness.
+
+Confidence: 93
+Text: f
+
+Confidence: 54
+Text: v
+
+Confidence: 95
+Text: Share
+
+Confidence: 95
+Text: a
+
+Confidence: 96
+Text: photo
+
+Confidence: 96
+Text: of
+
+Confidence: 92
+Text: your
+
+Confidence: 90
+Text: #homechef
+
+Confidence: 97
+Text: creation
+
+Confidence: 96
+Text: for
+
+Confidence: 96
+Text: a
+
+Confidence: 96
+Text: chance
+
+Confidence: 96
+Text: to
+
+Confidence: 96
+Text: win
+
+Confidence: 96
+Text: your
+
+Confidence: 96
+Text: next
+
+Confidence: 96
+Text: 4
+
+Confidence: 94
+Text: servings
+
+Confidence: 94
+Text: on
+
+Confidence: 96
+Text: us!
+
+Confidence: 92
+Text: HomeChef.com
+
+JAPANESE CHICKEN YAKITORI
+
+With Baby Bok Choy Slaw
+INGREDIENTS WHAT YOU NEED 367 calories per serving
+= Slaw Mix (2% 02) "Kosher Salt 40 minutes to prepare
+* Mirin (1% Tbsp.) = Black Pepper
+= Skewers (6) = Cooking Spray
+» Sesame Seeds (2 Tsp.) * Grill or Grill Pan
+= Cilantro Sprigs (4)
+* Lime (1) DRINK PAIRING
+* Baby Bok Choy (2 Heads) * Chilled Japanese-Style Lager, like
+= Soy Sauce (1 Oz) Sapporo
+* Brown Sugar (1% Tbsp.) = Cold Sake
+* Chicken Breasts (2) » Iced Green Tea with Mint
+
+|
+:
+4
+PREPARE THE VEGETABLES MARINATE THE CHICKEN MAKE THE SLAW
+* Rinse bok choy and remove the root. Julienne the = Ina clean mixing bowl, combine the soy sauce, » Inaseparate mixing bowl, combine the slaw
+remaining white part and leaves. half the brown sugar, and half the mirin. mix, bok choy, half the cilantro, remaining mirin,
+
+remaining brown sugar, juice of the lime to
+
+ensuring they're completely coated, and allow taste (add juice from a quarter at a time to
+to marinate for 15 minutes. gauge desired tartness), and half the sesame
+= Rinse the chicken, pat dry, and cut into 1-inch seeds.
+
+pieces.
+
+« Submerge skewers in water for 5 minutes before
+using (this prevents them from burning).
+
+* Rinse the cilantro and remove leaves from stem. «= Place the chicken pieces in the marinade,
+
+= Rinse and quarter the lime
+
+Mix and add salt and pepper to taste.
+= Let sit at room temperature before serving.
+
+PREPARE THE SKEWERS COOK THE CHICKEN PLATE THE DISH
+
+» Warm the grill pan or grill (or if you don'thavea = Adda serving of slaw to the plate.
+
+grill, you can use a skillet) to medium-high heat. = Nestle 2-3 skewers against the slaw.
+* Spray grill with cooking spray to ensure skewers * Garnish with remaining sesame seeds,
+
+do not stick. remaining cilantro leaves, and any remaining
+lime wedges.
+
+* Once chicken pieces have marinated, spear 3-4
+pieces on each skewer.
+
+= Once hot, add chicken skewers to grill and cook
+oneach side, flipping occasionally, for 4-5
+minutes, or until caramelized and firm.
+
+= Cut into chicken to ensure doneness.
+
+f v Share a photo of your #homechef creation for a chance to win your next 4 servings on us! HomeChef.com
+
