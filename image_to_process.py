@@ -8,8 +8,8 @@
 import cv2
 import numpy as np
 from typing import Callable, List, Tuple, Dict, Any
-from textwrap import dedent
 
+# decorator function definitions
 
 def invert_colors_for_processing(processing_func:Callable) -> Callable:
     '''Decorator function to invert pixel values, call processing function, then invert pixel values back to original.'''
@@ -28,9 +28,9 @@ def add_transformation(transformation_function_name:str) -> Callable:
             try:
                 processing_func(image_object, *args, **kwargs)
             except Exception as e:
+                print(image_object)
                 raise TransformationFailedError(str(e), '\nThe transformation failed....Run the debugger to investigate further.', image_object.ImagePath)
             else:
-                print(transformation_function_name, args, kwargs, sep='\n')
                 image_object.Transformations = (transformation_function_name, args, kwargs)
         return wrapper_function
     return perform_transformation
@@ -38,9 +38,9 @@ def add_transformation(transformation_function_name:str) -> Callable:
 def indent(number_of_single_spaces:int=4) -> str:
     return ' ' * number_of_single_spaces
 
+# main class definition
 class ImageToProcess():
     '''Object representing an image file to be processed to improve readability for Tesseract OCR.'''
-    # convert_grayscale:bool=True, remove_noise:bool=True, threshold:bool=False, dilate:bool=False, erode:bool=False, canny_edge:bool=False
     def __init__(self, image_path:str) -> None:
         '''
             Processes image to improve readability for Tesseract OCR.
@@ -78,7 +78,7 @@ class ImageToProcess():
     @property
     def Transformations(self) -> Dict[int, Tuple[str, List[Tuple[Any]|Dict[str, Any]]]]|None:
         return self._transformations
-    @Transformations.setter # transformation_function_name:str='', arguments:Tuple[Any]='', keywords:Dict[str, Any]=''
+    @Transformations.setter
     def Transformations(self, transformation_info:Tuple[str, Tuple[Any], Tuple[str, Any]]) -> None:
         '''
             Adds values into the Transformations property to keep track of which Transformations have been performed on the image.
@@ -98,15 +98,15 @@ class ImageToProcess():
         else:
             transformation_number = list(self._transformations.keys())[-1] + 1
         self._transformations[transformation_number] = ( transformation_function_name , [ arguments, keywords ])
-        print(self.Transformations)
 
     def get_transformations_string(self) -> str:
-        '''
-            FUNCTIONDOCSTRING
-            Arguments:
-                -
-        '''
+        '''Format information stored in self.Transformations to be printed'''
         def format_kwargs(kwargs_list:List[dict]) -> List[str]:
+            '''
+                FUNCTIONDOCSTRING
+                Arguments:
+                    -
+            '''
             formatted_kwargs:List[str] = []
             for kwarg_dict in kwargs_list:
                 current:List[str] = []
@@ -120,31 +120,52 @@ class ImageToProcess():
                     current.append(kwarg_str)
                 formatted_kwargs.append(', '.join([kw for kw in current if kw !='None']))
             return [kwarg_str if kwarg_str != '' else 'None' for kwarg_str in formatted_kwargs]
-        
         def get_align_values(number_list:List[int], name_list:List[str], arg_list:List[Any], kwarg_list:List[str]) -> List[int]:
+            '''
+                FUNCTIONDOCSTRING
+                Arguments:
+                    -
+            '''
             number_align:int = max([len(str(x)) for x in number_list])
             name_align:int = max([len(str(x)) for x in name_list])
             arg_align:int = max([len(str(x)) for x in arg_list])
             kwarg_align:int = max([len(str(x)) for x in kwarg_list])
             return [number_align, name_align, arg_align, kwarg_align]
-
+        if self.Transformations is None:
+            return f'Transformations Performed:\n    None'
+        # obtain key and value from self.Transformations
         transformation_numbers:List[int] = list(self.Transformations.keys())
         transformation_information:list = [info for info in list(self.Transformations.values())]
-
+        # obtain function names from self.Transformations.Values.Keys
         transformation_function_names:List[str] = [info[0] for info in transformation_information]
-
+        # obtain args and kwargs from self.Transformations.Values.Values
         transformation_args_and_kwargs:List[Tuple[Any], Dict[str, Any]] = [info[1] for info in transformation_information]
         transformation_args:List[List[Any]] = [args_and_kwargs[0] if len(args_and_kwargs[0]) != 0 else 'None' for args_and_kwargs in transformation_args_and_kwargs]
         transformation_kwargs:List[dict] = [args_and_kwargs[1] for args_and_kwargs in transformation_args_and_kwargs]
+        # format kwargs for output
         formatted_kwargs:List[str] = format_kwargs(transformation_kwargs)
-
+        # obtain max item length from each list to align columns
         number_align, name_align, arg_align, kwarg_align = get_align_values(transformation_numbers, transformation_function_names, transformation_args, formatted_kwargs)
-
+        # form a list of lines, one for each transformation
         transformation_lines = [f'{transformation_numbers[i]: <{number_align}} | {transformation_function_names[i]: <{name_align}} | arguments : {transformation_args[i]: <{arg_align}} | keywords : {formatted_kwargs[i]: <{kwarg_align}}' for i in range(len(transformation_numbers))]
-        return f'Transformations Performed:\n{'\n'.join(transformation_lines)}'
-
+        return f'Transformations Performed:\n{'\n'.join(transformation_lines)}' # return joined lines
 
     def __str__(self) -> str:
+        '''
+Image Path : recipe_card.jpeg
+    self.ImageData.shape=(2263, 1780)
+    self.ImageData.dtype=dtype('uint8')
+    self.OriginalImageData.shape=(2263, 1780, 3)
+    self.OriginalImageData.dtype=dtype('uint8')
+
+Transformations Performed:
+0 | shrink image                     | arguments : None | keywords : None                 
+1 | convert to grayscale             | arguments : None | keywords : None                 
+2 | bilateral filter blur            | arguments : None | keywords : None                 
+3 | otsu threshold                   | arguments : None | keywords : None                 
+4 | simple threshold                 | arguments : None | keywords : threshold_value = 175
+5 | close pixels (dilate then erode) | arguments : None | keywords : None 
+        '''
         string_representation = f'''\
 Image Path : {self.ImagePath}
     {self.ImageData.shape=}
@@ -156,6 +177,21 @@ Image Path : {self.ImagePath}
         return string_representation
 
     def __repr__(self) -> str:
+        '''
+Image Path : recipe_card.jpeg
+    self.ImageData.shape=(2263, 1780)
+    self.ImageData.dtype=dtype('uint8')
+    self.OriginalImageData.shape=(2263, 1780, 3)
+    self.OriginalImageData.dtype=dtype('uint8')
+
+Transformations Performed:
+0 | shrink image                     | arguments : None | keywords : None                 
+1 | convert to grayscale             | arguments : None | keywords : None                 
+2 | bilateral filter blur            | arguments : None | keywords : None                 
+3 | otsu threshold                   | arguments : None | keywords : None                 
+4 | simple threshold                 | arguments : None | keywords : threshold_value = 175
+5 | close pixels (dilate then erode) | arguments : None | keywords : None 
+        '''
         string_representation = f'''\
 Image Path : {self.ImagePath}
     {self.ImageData.shape=}
@@ -166,22 +202,23 @@ Image Path : {self.ImagePath}
 {self.get_transformations_string()}'''
         return string_representation
 
-    def reset_image_data(self):
+    def reset_image_data(self) -> None:
         self._image_data[0] = cv2.imread(self.ImagePath)
         self.ImageData = cv2.imread(self.ImagePath)
         self.InvertedColor = False
-        self.Transformations = None
+        self._transformations = None
 
-    def display_image(self, title:str|None=None, image:cv2.typing.MatLike|None=None) -> None:
+    def display_image(self, title:str|None=None, image:cv2.typing.MatLike|None=None) -> cv2.typing.MatLike:
         if title is None:
             title = self.ImagePath
         if image is None:
             image:cv2.typing.MatLike = self.ImageData
         cv2.imshow(title, image)
         cv2.waitKey(0)
+        return image
 
     @add_transformation('shrink image')
-    def shrink_image(self, scale_x:float=.75, scale_y:float=.75) -> None:
+    def shrink_image(self, scale_x:float=.75, scale_y:float=.75) -> cv2.typing.MatLike:
         '''
             Shrinks an image to a scale between (0, 1) on the x and y axis. Recommended to input the same scale for x and y to maintain image integrity.
             Arguments:
@@ -193,9 +230,10 @@ Image Path : {self.ImagePath}
         else:
             self.ImageData = cv2.resize(self.ImageData, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_AREA)
             self._image_data[0] = cv2.resize(self.OriginalImageData, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_AREA)
+            return self.ImageData
 
     @add_transformation('enlarge image')
-    def enlarge_image(self, scale_x:float=1.5, scale_y:float=1.5) -> None:
+    def enlarge_image(self, scale_x:float=1.5, scale_y:float=1.5) -> cv2.typing.MatLike:
         '''
             Enlarges an image to a scale between (0, 1) on the x and y axis. Recommended to input the same scale for x and y to maintain image integrity.
             Arguments:
@@ -207,13 +245,15 @@ Image Path : {self.ImagePath}
         else:
             self.ImageData = cv2.resize(self.ImageData, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_CUBIC)
             self._image_data[0] = cv2.resize(self.OriginalImageData, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_CUBIC)
+            return self.ImageData
 
     @add_transformation('convert to grayscale')
-    def convert_to_grayscale(self) -> None:
+    def convert_to_grayscale(self) -> cv2.typing.MatLike:
         self.ImageData = cv2.cvtColor(self.ImageData, cv2.COLOR_BGR2GRAY)
+        return self.ImageData
 
     @add_transformation('standard blur')
-    def standard_blur(self, blur_kernel_size:int=3) -> None:
+    def standard_blur(self, blur_kernel_size:int=3) -> cv2.typing.MatLike:
         '''
             Replaces a pixels value with the average of all pixels under the area (ksize, ksize).
             Arguments:
@@ -225,9 +265,10 @@ Image Path : {self.ImagePath}
             raise InvalidBlurArgumentsError('Blur kernel size cannot be greater than 9!', self.ImagePath)
         else:
             self.ImageData = cv2.blur(self.ImageData, (blur_kernel_size, blur_kernel_size))
+            return self.ImageData
 
     @add_transformation('gaussian blur')
-    def gaussian_blur(self, blur_kernel_size:int=3, sigma_space:int=0) -> None:
+    def gaussian_blur(self, blur_kernel_size:int=3, sigma_space:int=0) -> cv2.typing.MatLike:
         '''
             Reduces gaussian noise and reduces image detail. DOES NOT PRESERVE EDGES!
             Arguments:
@@ -242,9 +283,10 @@ Image Path : {self.ImagePath}
             raise InvalidBlurArgumentsError('Sigma value of a gaussian blur cannot be greater than 3!', self.ImagePath)
         else:
             self.ImageData = cv2.GaussianBlur(self.ImageData, (blur_kernel_size, blur_kernel_size), sigma_space)
+            return self.ImageData
 
     @add_transformation('median blur')
-    def median_blur(self, blur_kernel_size:int=3) -> None:
+    def median_blur(self, blur_kernel_size:int=3) -> cv2.typing.MatLike:
         '''
             ! BEST OPTION FOR SPEED AND EDGE PRESERVATION !
             Replaces the pixel values with the median value available in the neighborhood values.
@@ -258,9 +300,10 @@ Image Path : {self.ImagePath}
             raise InvalidBlurArgumentsError('Blur kernel size cannot be greater than 9!', self.ImagePath)
         else:
             self.ImageData = cv2.medianBlur(self.ImageData, blur_kernel_size)
+            return self.ImageData
 
     @add_transformation('bilateral filter blur')
-    def bilateral_filter_blur(self, blur_kernel_size:int=15, sigma_color:int=75, sigma_space:int=75) -> None:
+    def bilateral_filter_blur(self, blur_kernel_size:int=15, sigma_color:int=75, sigma_space:int=75) -> cv2.typing.MatLike:
         '''
             ! GOOD OPTION FOR EDGE PRESERVATION, BUT LACKS IN SPEED !
             Applies a normalization factor to a gaussian blur, ensuring that only pixels with similar intensity to the central pixel are blurred.
@@ -276,9 +319,10 @@ Image Path : {self.ImagePath}
             raise InvalidBlurArgumentsError('Blur kernel size cannot be greater than or equal to 25!', self.ImagePath)
         else:
             self.ImageData = cv2.bilateralFilter(self.ImageData, blur_kernel_size, sigma_color, sigma_space)
+            return self.ImageData
 
     @add_transformation('simple threshold')
-    def simple_threshold(self, threshold_value:int=127, color_if_less_than_threshold:int=255) -> None:
+    def simple_threshold(self, threshold_value:int=127, color_if_less_than_threshold:int=255) -> cv2.typing.MatLike:
         '''
             If the pixel value is greater than the threshold, it becomes black. If less, it becomes color_if_less_than_threshold.
             Arguments:
@@ -289,9 +333,10 @@ Image Path : {self.ImagePath}
             raise InvalidThresholdArgumentsError('Threshold value cannot be greater than or equal to 250!', self.ImagePath)
         else:
             self.ImageData = cv2.threshold(self.ImageData, threshold_value, color_if_less_than_threshold, cv2.THRESH_BINARY)[1]
+            return self.ImageData
 
     @add_transformation('adaptive threshold')
-    def adaptive_threshold(self, color_if_less_than_threshold:int=255, kernel_size:int=31, constant:int=2) -> None:
+    def adaptive_threshold(self, color_if_less_than_threshold:int=255, kernel_size:int=31, constant:int=2) -> cv2.typing.MatLike:
         '''
             Allows an algorithm to calculate the threshold for small regions of the image.
             Arguments:
@@ -305,18 +350,20 @@ Image Path : {self.ImagePath}
             raise InvalidThresholdArgumentsError('Size of neighborhood cannot be greater than or equal to 45!', self.ImagePath)
         else:
             self.ImageData = cv2.adaptiveThreshold(self.ImageData, color_if_less_than_threshold, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, kernel_size, constant)
+            return self.ImageData
 
     @add_transformation('otsu threshold')
-    def otsu_threshold(self) -> None:
+    def otsu_threshold(self) -> cv2.typing.MatLike:
         '''
             ! WORKS WELL WITH BIMODAL IMAGES, BUT MAY FAIL TO BINARIZE IMAGES THAT ARE NOT BIMODAL !
             Picks a threshold value that is within the peaks of a images histogram.
         '''
         self.ImageData = cv2.threshold(self.ImageData, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        return self.ImageData
 
     @add_transformation('dilate')
     @invert_colors_for_processing
-    def dilate(self, kernel_size:int=5, iterations:int=1) -> None:
+    def dilate(self, kernel_size:int=5, iterations:int=1) -> cv2.typing.MatLike:
         '''
             ! USEFUL TO DILATE AFTER ERODING !
             Increases the boundaries of a foreground object and accentuates features of the image.
@@ -335,10 +382,11 @@ Image Path : {self.ImagePath}
         else:
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
             self.ImageData = cv2.dilate(self.ImageData, kernel, iterations=iterations)
+            return self.ImageData
 
     @add_transformation('erode')
     @invert_colors_for_processing
-    def erode(self, kernel_size:int=5, iterations:int=1) -> None:
+    def erode(self, kernel_size:int=5, iterations:int=1) -> cv2.typing.MatLike:
         '''
             ! USEFUL TO DILATE AFTER ERODING !
             Decreases the boundaries of a foreground object and diminishes features of the image.
@@ -357,10 +405,11 @@ Image Path : {self.ImagePath}
         else:
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
             self.ImageData = cv2.erode(self.ImageData, kernel, iterations=iterations)
+            return self.ImageData
 
     @add_transformation('open pixels (erode then dilate)')
     @invert_colors_for_processing
-    def open_pixels(self, kernel_size:int=3) -> None:
+    def open_pixels(self, kernel_size:int=3) -> cv2.typing.MatLike:
         '''
             Erosion followed by dilation. Useful in removing noise.
             Arguments:
@@ -375,10 +424,11 @@ Image Path : {self.ImagePath}
         else:
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
             self.ImageData = cv2.morphologyEx(self.ImageData, cv2.MORPH_OPEN, kernel)
+            return self.ImageData
 
     @add_transformation('close pixels (dilate then erode)')
     @invert_colors_for_processing
-    def close_pixels(self, kernel_size:int=3) -> None:
+    def close_pixels(self, kernel_size:int=3) -> cv2.typing.MatLike:
         '''
             Dilation followed by erosion. Useful in closing small holse inside foreground objects.
             Arguments:
@@ -393,19 +443,17 @@ Image Path : {self.ImagePath}
         else:
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
             self.ImageData = cv2.morphologyEx(self.ImageData, cv2.MORPH_CLOSE, kernel)
+            return self.ImageData
 
     @add_transformation('draw contours')
     def draw_contours(self, contour_area_threshold:int=1000) -> None:
-
-        self.enlarge_image_size(scale_x=2, scale_y=2)
+        self.enlarge_image(scale_x=2, scale_y=2)
         self.convert_to_grayscale()
         self.median_blur()
         self.simple_threshold(threshold_value=170, color_if_less_than_threshold=255)
         self.open_pixels()
         self.otsu_threshold()
-
         self.display_image()
-
         potential_images:list[cv2.typing.MatLike] = []
         contours = cv2.findContours(self.ImageData, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
         filtered_contours = [contour for contour in contours if cv2.contourArea(contour) > contour_area_threshold]
@@ -415,16 +463,14 @@ Image Path : {self.ImagePath}
             if 0.9 <= aspect_ratio <=1.1:
                 potential_images.append(contour)
         self.reset_image_data()
-        self.convert_to_grayscale()
+        self.enlarge_image(scale_x=2, scale_y=2)
         mask = np.zeros_like(self.ImageData)
+        grayscale = self.convert_to_grayscale()
         for contour in potential_images:
             x, y, w, h = cv2.boundingRect(contour)
             cv2.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
-
-        masked_image = cv2.bitwise_and(self.OriginalImageData, self.ImageData, mask=mask)
-
+        masked_image = cv2.bitwise_and(grayscale, self.ImageData, mask=mask)
         self.display_image('masked', masked_image)
-        # self.ImageData = cv2.drawContours(self.ImageData, contours, -1, (0, 255, 0), 3)
 
 # error handling definitions
 
@@ -444,7 +490,7 @@ class InvalidScaleArgumentsError(Exception):
     '''Raised when the scale is greater than or equal to 1.0 when shrinking an image or less than or equal to 1.0 when enlarging an image.'''
     def __init__(self, error_message:str, image_to_process_path:ImageToProcess.ImagePath) -> None:
         '''
-            FUNCTIONDOCSTRING
+            Raised when the scale is greater than or equal to 1.0 when shrinking an image or less than or equal to 1.0 when enlarging an image.
             Arguments:
                 - error_message : string that contains \\n for each new line followed by desired whitespace. Ex : "Blur kernel size cannot be greater than or equal to 10!\\nAnything greater than 10 will result in an image quality that is too poor.\\nTypically a smaller value will produce better results."
                 - image_to_process_path : ImagePath property of ImageToProcess
@@ -456,7 +502,7 @@ class InvalidBlurArgumentsError(Exception):
     '''Raised when the blur kernel size is greater than 9 (or 25 in a bilateral filter) or the sigma value of a gaussian blur is greater than 3'''
     def __init__(self, error_message:str, image_to_process_path:ImageToProcess.ImagePath, kernel_size_error:bool=False) -> None:
         '''
-            FUNCTIONDOCSTRING
+            Raised when the blur kernel size is greater than 9 (or 25 in a bilateral filter) or the sigma value of a gaussian blur is greater than 3
             Arguments:
                 - error_message : string that contains \\n for each new line followed by desired whitespace. Ex : "Blur kernel size cannot be greater than or equal to 10!\\nAnything greater than 10 will result in an image quality that is too poor.\\nTypically a smaller value will produce better results."
                 - image_to_process_path : ImagePath property of ImageToProcess
@@ -470,7 +516,7 @@ class InvalidThresholdArgumentsError(Exception):
     '''Raised when the threshold is greater than or equal to 250 or the size of neighborhood is greater than or equal to 45 in an adaptive threshold.'''
     def __init__(self, error_message:str, image_to_process_path:ImageToProcess.ImagePath) -> None:
         '''
-            FUNCTIONDOCSTRING
+            Raised when the threshold is greater than or equal to 250 or the size of neighborhood is greater than or equal to 45 in an adaptive threshold.
             Arguments:
                 - error_message : string that contains \\n for each new line followed by desired whitespace. Ex : "Blur kernel size cannot be greater than or equal to 10!\\nAnything greater than 10 will result in an image quality that is too poor.\\nTypically a smaller value will produce better results."
                 - image_to_process_path : ImagePath property of ImageToProcess
@@ -482,7 +528,7 @@ class InvalidDilateOrErodeArguments(Exception):
     '''Raised when the neighborhood size is greater than or equal to 10 when eroding or dilating.'''
     def __init__(self, error_message:str, image_to_process_path:ImageToProcess.ImagePath) -> None:
         '''
-            FUNCTIONDOCSTRING
+            Raised when the neighborhood size is greater than or equal to 10 when eroding or dilating.
             Arguments:
                 - error_message : string that contains \\n for each new line followed by desired whitespace. Ex : "Blur kernel size cannot be greater than or equal to 10!\\nAnything greater than 10 will result in an image quality that is too poor.\\nTypically a smaller value will produce better results."
                 - image_to_process_path : ImagePath property of ImageToProcess
@@ -491,9 +537,10 @@ class InvalidDilateOrErodeArguments(Exception):
         super().__init__(formatted_error_message)
 
 class TransformationFailedError(Exception):
+    '''Raised when a transformation process fails outside of an established try:except block.'''
     def __init__(self, original_error_message:str, error_message:str, image_to_process_path:ImageToProcess.ImagePath) -> None:
         '''
-            FUNCTIONDOCSTRING
+            Raised when a transformation process fails outside of an established try:except block.
             Arguments:
                 - original_error_message : error message from the origin error (except Error as e)
                 - custom_error_message : string that contains \\n for each new line followed by desired whitespace. Ex : "Blur kernel size cannot be greater than or equal to 10!\\nAnything greater than 10 will result in an image quality that is too poor.\\nTypically a smaller value will produce better results."
@@ -504,7 +551,10 @@ class TransformationFailedError(Exception):
 
 def main():
     test = ImageToProcess(image_path='recipe_card.jpeg')
-    print(test)
+    test.draw_contours(contour_area_threshold=15000)
+    test.display_image()
+    print('\n\n' + test)
+
 
 
 if __name__ == "__main__":
