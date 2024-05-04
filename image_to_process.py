@@ -485,9 +485,9 @@ Image Path : {self.ImagePath}
             return self.ImageData
 
     @add_transformation('draw contours')
-    def draw_contours(self, contour_area_threshold:int=1000, filter:bool=True) -> List[List[int]]:
+    def draw_contours(self, min_threshold:int=1_000, max_threshold:int=500_000, filter:bool=True) -> List[List[int]]:
         def filter_contours(image_contours:List[MatLike]) -> List[MatLike]:
-            filtered_contours = [contour for contour in image_contours if cv.contourArea(contour) > contour_area_threshold]
+            filtered_contours = [contour for contour in image_contours if cv.contourArea(contour) > min_threshold and cv.contourArea(contour) < max_threshold]
             return filtered_contours
         contours = cv.findContours(self.ImageData, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)[0]
         grayscale = cv.cvtColor(self.OriginalImageData, cv.COLOR_BGR2GRAY)
@@ -499,11 +499,11 @@ Image Path : {self.ImagePath}
         rect_info = []
         for contour in potential_images:
             x, y, w, h = cv.boundingRect(contour)
-            r_info = [x, y, w, h]
-            rect_info.append(r_info)
             if y < (self.ImageData.shape[0] / 5) and y > (self.ImageData.shape[0] / 12):
                 continue
             else:
+                r_info = [x, y, w, h]
+                rect_info.append(r_info)
                 cv.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
             cv.bitwise_and(self.ImageData, self.ImageData, mask=mask)
         return rect_info
@@ -585,23 +585,25 @@ class TransformationFailedError(Exception):
         super().__init__(original_error_message + formatted_custom_error_message)
 
 def mask_over_large_noise_inside_image():
-    test = ImageToProcess(image_path='blue_apron.png')
+    test = ImageToProcess(image_path='recipe_card.jpeg')
     test.enlarge_image(2, 2)
     test.convert_to_grayscale()
     test.gaussian_blur(blur_kernel_size=81, edge_detect=True)
-    test.display_image('gaussian blur')
-    test.simple_threshold(80, 225)
-    test.close_pixels()
-    test.dilate()
+    # test.display_image('gaussian blur')
+    test.otsu_threshold(240, 255)
     test.display_image('threshhold and closed and dilated')
     test.canny_edge_threshold(0, 255, 5, False)
     test.display_image('canny')
     test.erode(iterations=3)
     test.display_image('eroded')
-    threshold_for_image = int((test.OriginalImageData.shape[0]/38)**2)
-    rect_info = test.draw_contours(contour_area_threshold=threshold_for_image)
+    threshold_for_image = int((test.OriginalImageData.shape[0]/50)**2)
+    rect_info = test.draw_contours(min_threshold=threshold_for_image)
     test.display_image('masked image')
     print(rect_info)
+    for rect in rect_info:
+        x, y, w, h = rect
+        cv.rectangle(test.OriginalImageData, (x, y), (x + w, y + h), 255, -1)
+    test.display_image('original grayscale with rects', test.OriginalImageData)
 
 
 
