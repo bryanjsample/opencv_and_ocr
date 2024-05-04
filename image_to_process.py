@@ -125,7 +125,6 @@ class ImageToProcess():
                     current.append(kwarg_str)
                 formatted_kwargs.append(', '.join([kw for kw in current if kw !='None']))
             return [kwarg_str if kwarg_str != '' else 'None' for kwarg_str in formatted_kwargs]
-
         def format_args(args_list:List[Tuple|str]) -> List[str]:
             formatted_args:List[str] = []
             for args in args_list:
@@ -134,7 +133,6 @@ class ImageToProcess():
                 else:
                     formatted_args.append(', '.join([str(arg) for arg in args]))
             return formatted_args
-
         def get_align_values(number_list:List[int], name_list:List[str], arg_list:List[Any], kwarg_list:List[str]) -> List[int]:
             '''
                 FUNCTIONDOCSTRING
@@ -488,7 +486,17 @@ Image Path : {self.ImagePath}
 
     @add_transformation('draw contours')
     def draw_contours(self, min_threshold:int=1_000, max_threshold:int=500_000, filter:bool=True) -> List[List[int]]:
+        '''
+            FUNCTIONDOCSTRING
+            Arguments:
+                -
+        '''
         def filter_contours(image_contours:List[MatLike]) -> List[MatLike]:
+            '''
+                FUNCTIONDOCSTRING
+                Arguments:
+                    -
+            '''
             filtered_contours = [contour for contour in image_contours if cv.contourArea(contour) > min_threshold and cv.contourArea(contour) < max_threshold]
             return filtered_contours
         contours = cv.findContours(self.ImageData, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)[0]
