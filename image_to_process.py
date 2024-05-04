@@ -6,6 +6,7 @@
 '''
 
 import cv2 as cv
+from time import sleep
 from cv2.typing import MatLike
 import numpy as np
 from typing import Callable, List, Tuple, Dict, Any
@@ -27,12 +28,13 @@ def add_transformation(transformation_function_name:str) -> Callable:
     def perform_transformation(processing_func:Callable) -> Callable:
         def wrapper_function(image_object:object, *args, **kwargs) -> None:
             try:
-                processing_func(image_object, *args, **kwargs)
+                return_val = processing_func(image_object, *args, **kwargs)
             except Exception as e:
                 print(image_object)
                 raise TransformationFailedError(str(e), '\nThe transformation failed....Run the debugger to investigate further.', image_object.ImagePath)
             else:
                 image_object.Transformations = (transformation_function_name, args, kwargs)
+            return return_val
         return wrapper_function
     return perform_transformation
 
@@ -483,7 +485,7 @@ Image Path : {self.ImagePath}
             return self.ImageData
 
     @add_transformation('draw contours')
-    def draw_contours(self, contour_area_threshold:int=1000, filter:bool=True) -> MatLike:
+    def draw_contours(self, contour_area_threshold:int=1000, filter:bool=True) -> List[List[int]]:
         def filter_contours(image_contours:List[MatLike]) -> List[MatLike]:
             filtered_contours = [contour for contour in image_contours if cv.contourArea(contour) > contour_area_threshold]
             return filtered_contours
@@ -494,14 +496,17 @@ Image Path : {self.ImagePath}
             potential_images = filter_contours(contours)
         else:
             potential_images = contours
+        rect_info = []
         for contour in potential_images:
             x, y, w, h = cv.boundingRect(contour)
+            r_info = [x, y, w, h]
+            rect_info.append(r_info)
             if y < (self.ImageData.shape[0] / 5) and y > (self.ImageData.shape[0] / 12):
                 continue
             else:
                 cv.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
-        masked_image = cv.bitwise_and(self.OriginalImageData, self.OriginalImageData, mask=mask)
-        return masked_image
+            cv.bitwise_and(self.ImageData, self.ImageData, mask=mask)
+        return rect_info
 # error handling definitions
 
 def format_exception_new_lines(exception_class:object, error_message:str, image_to_process_path:ImageToProcess.ImagePath) -> str:
@@ -585,15 +590,18 @@ def mask_over_large_noise_inside_image():
     test.convert_to_grayscale()
     test.gaussian_blur(blur_kernel_size=81, edge_detect=True)
     test.display_image('gaussian blur')
-    test.otsu_threshold(230, 255)
+    test.simple_threshold(80, 225)
+    test.close_pixels()
+    test.dilate()
     test.display_image('threshhold and closed and dilated')
     test.canny_edge_threshold(0, 255, 5, False)
     test.display_image('canny')
     test.erode(iterations=3)
     test.display_image('eroded')
     threshold_for_image = int((test.OriginalImageData.shape[0]/38)**2)
-    masked = test.draw_contours(contour_area_threshold=threshold_for_image)
-    test.display_image('masked image', masked)
+    rect_info = test.draw_contours(contour_area_threshold=threshold_for_image)
+    test.display_image('masked image')
+    print(rect_info)
 
 
 
