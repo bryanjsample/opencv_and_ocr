@@ -230,6 +230,7 @@ Image Path : {self.ImagePath}
         cv.imshow(title, image)
         print(title, '\n\n' f'{self}')
         cv.waitKey(0)
+        cv.destroyAllWindows()
         return image
 
     @add_transformation('shrink image')
@@ -484,27 +485,22 @@ Image Path : {self.ImagePath}
     @add_transformation('draw contours')
     def draw_contours(self, contour_area_threshold:int=1000, filter:bool=True) -> MatLike:
         def filter_contours(image_contours:List[MatLike]) -> List[MatLike]:
-            potential_images:List[MatLike] = []
             filtered_contours = [contour for contour in image_contours if cv.contourArea(contour) > contour_area_threshold]
-            for contour in filtered_contours:
-                x, y, w, h = cv.boundingRect(contour)
-                aspect_ratio = float(w) / h
-                if 0.9 <= aspect_ratio <=1.1:
-                    potential_images.append(contour)
-            return potential_images
+            return filtered_contours
         contours = cv.findContours(self.ImageData, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)[0]
         grayscale = cv.cvtColor(self.OriginalImageData, cv.COLOR_BGR2GRAY)
         mask = np.zeros_like(grayscale)
         if filter:
-            print('filtering')
             potential_images = filter_contours(contours)
         else:
-            print('not filtering')
             potential_images = contours
         for contour in potential_images:
             x, y, w, h = cv.boundingRect(contour)
-            cv.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
-        masked_image = cv.bitwise_and(grayscale, grayscale, mask=mask)
+            if y < (self.ImageData.shape[0] / 5) and y > (self.ImageData.shape[0] / 12):
+                continue
+            else:
+                cv.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
+        masked_image = cv.bitwise_and(self.OriginalImageData, self.OriginalImageData, mask=mask)
         return masked_image
 # error handling definitions
 
@@ -584,10 +580,10 @@ class TransformationFailedError(Exception):
         super().__init__(original_error_message + formatted_custom_error_message)
 
 def mask_over_large_noise_inside_image():
-    test = ImageToProcess(image_path='recipe_card.jpeg')
+    test = ImageToProcess(image_path='blue_apron.png')
     test.enlarge_image(2, 2)
     test.convert_to_grayscale()
-    test.gaussian_blur(blur_kernel_size=125, edge_detect=True)
+    test.gaussian_blur(blur_kernel_size=81, edge_detect=True)
     test.display_image('gaussian blur')
     test.otsu_threshold(230, 255)
     test.display_image('threshhold and closed and dilated')
@@ -595,18 +591,12 @@ def mask_over_large_noise_inside_image():
     test.display_image('canny')
     test.erode(iterations=3)
     test.display_image('eroded')
-    masked = test.draw_contours(filter=False)
+    threshold_for_image = int((test.OriginalImageData.shape[0]/38)**2)
+    masked = test.draw_contours(contour_area_threshold=threshold_for_image)
     test.display_image('masked image', masked)
 
 
 
 if __name__ == "__main__":
-    main()
-
-
-
-
-'''
-
-'''
+    mask_over_large_noise_inside_image()
 
