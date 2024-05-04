@@ -5,7 +5,8 @@
     Class definition of ImageToProcess, which enables processing of an image to improve it's readability for Tesseract OCR
 '''
 
-import cv2
+import cv2 as cv
+from cv2.typing import MatLike
 import numpy as np
 from typing import Callable, List, Tuple, Dict, Any
 
@@ -14,10 +15,10 @@ from typing import Callable, List, Tuple, Dict, Any
 def invert_colors_for_processing(processing_func:Callable) -> Callable:
     '''Decorator function to invert pixel values, call processing function, then invert pixel values back to original.'''
     def wrapper_function(image_object:object, *args, **kwargs) -> None:
-        image_object.ImageData = cv2.bitwise_not(image_object.ImageData)
+        image_object.ImageData = cv.bitwise_not(image_object.ImageData)
         image_object.InvertedColor = True
         processing_func(image_object, *args, **kwargs)
-        image_object.ImageData = cv2.bitwise_not(image_object.ImageData)
+        image_object.ImageData = cv.bitwise_not(image_object.ImageData)
         image_object.InvertedColor = False
     return wrapper_function
 
@@ -48,7 +49,7 @@ class ImageToProcess():
                 - image_path : path to image being processed
         '''
         self._image_path:str = image_path
-        self._image_data:List[cv2.typing.MatLike] = [cv2.imread(image_path), cv2.imread(image_path)]
+        self._image_data:List[MatLike] = [cv.imread(image_path), cv.imread(image_path)]
         self._inverted_color:bool = False
         self._transformations:Dict[int, Tuple[str, List[Tuple[Any]|Dict[str, Any]]]]|None = None
 
@@ -57,15 +58,15 @@ class ImageToProcess():
         return self._image_path
 
     @property
-    def OriginalImageData(self) -> cv2.typing.MatLike:
+    def OriginalImageData(self) -> MatLike:
         '''If image is resized, then original image data will be resized to match.'''
         return self._image_data[0]
 
     @property
-    def ImageData(self) -> cv2.typing.MatLike:
+    def ImageData(self) -> MatLike:
         return self._image_data[1]
     @ImageData.setter
-    def ImageData(self, new_data_value:cv2.typing.MatLike) -> None:
+    def ImageData(self, new_data_value:MatLike) -> None:
         self._image_data[1] = new_data_value
 
     @property
@@ -120,6 +121,16 @@ class ImageToProcess():
                     current.append(kwarg_str)
                 formatted_kwargs.append(', '.join([kw for kw in current if kw !='None']))
             return [kwarg_str if kwarg_str != '' else 'None' for kwarg_str in formatted_kwargs]
+
+        def format_args(args_list:List[Tuple|str]) -> List[str]:
+            formatted_args:List[str] = []
+            for args in args_list:
+                if args == 'None':
+                    formatted_args.append(args)
+                else:
+                    formatted_args.append(', '.join([str(arg) for arg in args]))
+            return formatted_args
+
         def get_align_values(number_list:List[int], name_list:List[str], arg_list:List[Any], kwarg_list:List[str]) -> List[int]:
             '''
                 FUNCTIONDOCSTRING
@@ -142,12 +153,13 @@ class ImageToProcess():
         transformation_args_and_kwargs:List[Tuple[Any], Dict[str, Any]] = [info[1] for info in transformation_information]
         transformation_args:List[List[Any]] = [args_and_kwargs[0] if len(args_and_kwargs[0]) != 0 else 'None' for args_and_kwargs in transformation_args_and_kwargs]
         transformation_kwargs:List[dict] = [args_and_kwargs[1] for args_and_kwargs in transformation_args_and_kwargs]
-        # format kwargs for output
+        # format args and kwargs for output
+        formatted_args = format_args(transformation_args)
         formatted_kwargs:List[str] = format_kwargs(transformation_kwargs)
         # obtain max item length from each list to align columns
         number_align, name_align, arg_align, kwarg_align = get_align_values(transformation_numbers, transformation_function_names, transformation_args, formatted_kwargs)
         # form a list of lines, one for each transformation
-        transformation_lines = [f'{transformation_numbers[i]: <{number_align}} | {transformation_function_names[i]: <{name_align}} | arguments : {transformation_args[i]: <{arg_align}} | keywords : {formatted_kwargs[i]: <{kwarg_align}}' for i in range(len(transformation_numbers))]
+        transformation_lines = [f'{transformation_numbers[i]: <{number_align}} | {transformation_function_names[i]: <{name_align}} | arguments : {formatted_args[i]: <{arg_align}} | keywords : {formatted_kwargs[i]: <{kwarg_align}}' for i in range(len(transformation_numbers))]
         return f'Transformations Performed:\n{'\n'.join(transformation_lines)}' # return joined lines
 
     def __str__(self) -> str:
@@ -173,7 +185,8 @@ Image Path : {self.ImagePath}
     {self.OriginalImageData.shape=}
     {self.OriginalImageData.dtype=}
 
-{self.get_transformations_string()}'''
+{self.get_transformations_string()}
+'''
         return string_representation
 
     def __repr__(self) -> str:
@@ -199,26 +212,28 @@ Image Path : {self.ImagePath}
     {self.OriginalImageData.shape=}
     {self.OriginalImageData.dtype=}
 
-{self.get_transformations_string()}'''
+{self.get_transformations_string()}
+'''
         return string_representation
 
     def reset_image_data(self) -> None:
-        self._image_data[0] = cv2.imread(self.ImagePath)
-        self.ImageData = cv2.imread(self.ImagePath)
+        self._image_data[0] = cv.imread(self.ImagePath)
+        self.ImageData = cv.imread(self.ImagePath)
         self.InvertedColor = False
         self._transformations = None
 
-    def display_image(self, title:str|None=None, image:cv2.typing.MatLike|None=None) -> cv2.typing.MatLike:
+    def display_image(self, title:str|None=None, image:MatLike|None=None) -> MatLike:
         if title is None:
             title = self.ImagePath
         if image is None:
-            image:cv2.typing.MatLike = self.ImageData
-        cv2.imshow(title, image)
-        cv2.waitKey(0)
+            image:MatLike = self.ImageData
+        cv.imshow(title, image)
+        print(title, '\n\n' f'{self}')
+        cv.waitKey(0)
         return image
 
     @add_transformation('shrink image')
-    def shrink_image(self, scale_x:float=.75, scale_y:float=.75) -> cv2.typing.MatLike:
+    def shrink_image(self, scale_x:float=.75, scale_y:float=.75) -> MatLike:
         '''
             Shrinks an image to a scale between (0, 1) on the x and y axis. Recommended to input the same scale for x and y to maintain image integrity.
             Arguments:
@@ -228,12 +243,12 @@ Image Path : {self.ImagePath}
         if scale_x >= 1 or scale_y >= 1:
             raise InvalidScaleArgumentsError("Scale cannot be greater than or equal to 1.0!", self.ImagePath)
         else:
-            self.ImageData = cv2.resize(self.ImageData, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_AREA)
-            self._image_data[0] = cv2.resize(self.OriginalImageData, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_AREA)
+            self.ImageData = cv.resize(self.ImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_AREA)
+            self._image_data[0] = cv.resize(self.OriginalImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_AREA)
             return self.ImageData
 
     @add_transformation('enlarge image')
-    def enlarge_image(self, scale_x:float=1.5, scale_y:float=1.5) -> cv2.typing.MatLike:
+    def enlarge_image(self, scale_x:float=1.5, scale_y:float=1.5) -> MatLike:
         '''
             Enlarges an image to a scale between (0, 1) on the x and y axis. Recommended to input the same scale for x and y to maintain image integrity.
             Arguments:
@@ -243,50 +258,52 @@ Image Path : {self.ImagePath}
         if scale_x <= 1 or scale_y <= 1:
             raise InvalidScaleArgumentsError("Scale cannot be less than or equal to 1.0!", self.ImagePath)
         else:
-            self.ImageData = cv2.resize(self.ImageData, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_CUBIC)
-            self._image_data[0] = cv2.resize(self.OriginalImageData, None, fx=scale_x, fy=scale_y, interpolation=cv2.INTER_CUBIC)
+            self.ImageData = cv.resize(self.ImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_CUBIC)
+            self._image_data[0] = cv.resize(self.OriginalImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_CUBIC)
             return self.ImageData
 
     @add_transformation('convert to grayscale')
-    def convert_to_grayscale(self) -> cv2.typing.MatLike:
-        self.ImageData = cv2.cvtColor(self.ImageData, cv2.COLOR_BGR2GRAY)
+    def convert_to_grayscale(self) -> MatLike:
+        self.ImageData = cv.cvtColor(self.ImageData, cv.COLOR_BGR2GRAY)
         return self.ImageData
 
     @add_transformation('standard blur')
-    def standard_blur(self, blur_kernel_size:int=3) -> cv2.typing.MatLike:
+    def standard_blur(self, blur_kernel_size:int=3, edge_detect:bool=False) -> MatLike:
         '''
             Replaces a pixels value with the average of all pixels under the area (ksize, ksize).
             Arguments:
                 - blur_kernel_size : size of the kernel to blur, must not be greater than 9
         '''
-        if blur_kernel_size % 2 != 1:
+        if edge_detect:
+            pass
+        elif blur_kernel_size % 2 != 1:
             raise InvalidBlurArgumentsError('Blur kernel size must be odd!', self.ImagePath, kernel_size_error=True)
         elif blur_kernel_size > 9:
             raise InvalidBlurArgumentsError('Blur kernel size cannot be greater than 9!', self.ImagePath)
-        else:
-            self.ImageData = cv2.blur(self.ImageData, (blur_kernel_size, blur_kernel_size))
-            return self.ImageData
+        self.ImageData = cv.blur(self.ImageData, (blur_kernel_size, blur_kernel_size))
+        return self.ImageData
 
     @add_transformation('gaussian blur')
-    def gaussian_blur(self, blur_kernel_size:int=3, sigma_space:int=0) -> cv2.typing.MatLike:
+    def gaussian_blur(self, blur_kernel_size:int=3, sigma_space:int=0, edge_detect:bool=False) -> MatLike:
         '''
             Reduces gaussian noise and reduces image detail. DOES NOT PRESERVE EDGES!
             Arguments:
                 - blur_kernel_size : size of the kernel to blur, must not be greater than 9
                 - sigma_space : standard deviation of blur on the x axis, must not be greater than 3
         '''
-        if blur_kernel_size % 2 != 1:
+        if edge_detect:
+            pass
+        elif blur_kernel_size % 2 != 1:
             raise InvalidBlurArgumentsError('Blur kernel size must be odd!', self.ImagePath, kernel_size_error=True)
         elif blur_kernel_size > 9:
             raise InvalidBlurArgumentsError('Blur kernel size cannot be greater than 9!', self.ImagePath)
-        elif sigma_space > 3:
+        if sigma_space > 3:
             raise InvalidBlurArgumentsError('Sigma value of a gaussian blur cannot be greater than 3!', self.ImagePath)
-        else:
-            self.ImageData = cv2.GaussianBlur(self.ImageData, (blur_kernel_size, blur_kernel_size), sigma_space)
-            return self.ImageData
+        self.ImageData = cv.GaussianBlur(self.ImageData, (blur_kernel_size, blur_kernel_size), sigma_space)
+        return self.ImageData
 
     @add_transformation('median blur')
-    def median_blur(self, blur_kernel_size:int=3) -> cv2.typing.MatLike:
+    def median_blur(self, blur_kernel_size:int=3, edge_detect:bool=False) -> MatLike:
         '''
             ! BEST OPTION FOR SPEED AND EDGE PRESERVATION !
             Replaces the pixel values with the median value available in the neighborhood values.
@@ -294,16 +311,17 @@ Image Path : {self.ImagePath}
             Arguments:
                 - blur_kernel_size : size of the kernel to blur, must not be greater than 9
         '''
-        if blur_kernel_size % 2 != 1:
+        if edge_detect:
+            pass
+        elif blur_kernel_size % 2 != 1:
             raise InvalidBlurArgumentsError('Blur kernel size must be odd!', self.ImagePath, kernel_size_error=True)
         elif blur_kernel_size > 9:
             raise InvalidBlurArgumentsError('Blur kernel size cannot be greater than 9!', self.ImagePath)
-        else:
-            self.ImageData = cv2.medianBlur(self.ImageData, blur_kernel_size)
-            return self.ImageData
+        self.ImageData = cv.medianBlur(self.ImageData, blur_kernel_size)
+        return self.ImageData
 
     @add_transformation('bilateral filter blur')
-    def bilateral_filter_blur(self, blur_kernel_size:int=15, sigma_color:int=75, sigma_space:int=75) -> cv2.typing.MatLike:
+    def bilateral_filter_blur(self, blur_kernel_size:int=15, sigma_color:int=75, sigma_space:int=75, edge_detect:bool=False) -> MatLike:
         '''
             ! GOOD OPTION FOR EDGE PRESERVATION, BUT LACKS IN SPEED !
             Applies a normalization factor to a gaussian blur, ensuring that only pixels with similar intensity to the central pixel are blurred.
@@ -313,30 +331,31 @@ Image Path : {self.ImagePath}
                 - sigma_color : normalization factor of colors
                 - simga_space : normalization factor of space
         '''
-        if blur_kernel_size % 2 != 1:
+        if edge_detect:
+            pass
+        elif blur_kernel_size % 2 != 1:
             raise InvalidBlurArgumentsError('Blur kernel size must be odd!', self.ImagePath, kernel_size_error=True)
         elif blur_kernel_size > 25:
             raise InvalidBlurArgumentsError('Blur kernel size cannot be greater than or equal to 25!', self.ImagePath)
-        else:
-            self.ImageData = cv2.bilateralFilter(self.ImageData, blur_kernel_size, sigma_color, sigma_space)
-            return self.ImageData
+        self.ImageData = cv.bilateralFilter(self.ImageData, blur_kernel_size, sigma_color, sigma_space)
+        return self.ImageData
 
     @add_transformation('simple threshold')
-    def simple_threshold(self, threshold_value:int=127, color_if_less_than_threshold:int=255) -> cv2.typing.MatLike:
+    def simple_threshold(self, threshold_value1:int=127, threshold_value2:int=255) -> MatLike:
         '''
-            If the pixel value is greater than the threshold, it becomes black. If less, it becomes color_if_less_than_threshold.
+            If the pixel value is greater than the threshold, it becomes black. If less, it becomes threshold_value2.
             Arguments:
-                - threshold_value : if average value of pixel exceeds this, it becomes black.
-                - color_if_less_than_threshold : grayscale value to set pixel if less than threshold_value
+                - threshold_value1 : if average value of pixel exceeds this, it becomes black.
+                - threshold_value2 : grayscale value to set pixel if less than threshold_value
         '''
-        if threshold_value >= 250:
-            raise InvalidThresholdArgumentsError('Threshold value cannot be greater than or equal to 250!', self.ImagePath)
+        if threshold_value1 >= threshold_value2:
+            raise InvalidThresholdArgumentsError('Threshold value 2 cannot be less than threshold value 1!', self.ImagePath)
         else:
-            self.ImageData = cv2.threshold(self.ImageData, threshold_value, color_if_less_than_threshold, cv2.THRESH_BINARY)[1]
+            self.ImageData = cv.threshold(self.ImageData, threshold_value1, threshold_value2, cv.THRESH_BINARY)[1]
             return self.ImageData
 
     @add_transformation('adaptive threshold')
-    def adaptive_threshold(self, color_if_less_than_threshold:int=255, kernel_size:int=31, constant:int=2) -> cv2.typing.MatLike:
+    def adaptive_threshold(self, color_if_less_than_threshold:int=255, kernel_size:int=31, constant:int=2) -> MatLike:
         '''
             Allows an algorithm to calculate the threshold for small regions of the image.
             Arguments:
@@ -349,21 +368,38 @@ Image Path : {self.ImagePath}
         if kernel_size >= 45:
             raise InvalidThresholdArgumentsError('Size of neighborhood cannot be greater than or equal to 45!', self.ImagePath)
         else:
-            self.ImageData = cv2.adaptiveThreshold(self.ImageData, color_if_less_than_threshold, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, kernel_size, constant)
+            self.ImageData = cv.adaptiveThreshold(self.ImageData, color_if_less_than_threshold, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, kernel_size, constant)
             return self.ImageData
 
     @add_transformation('otsu threshold')
-    def otsu_threshold(self) -> cv2.typing.MatLike:
+    def otsu_threshold(self, threshold_value1:int=0, threshold_value2:int=255) -> MatLike:
         '''
             ! WORKS WELL WITH BIMODAL IMAGES, BUT MAY FAIL TO BINARIZE IMAGES THAT ARE NOT BIMODAL !
             Picks a threshold value that is within the peaks of a images histogram.
         '''
-        self.ImageData = cv2.threshold(self.ImageData, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        if threshold_value1 >= threshold_value2:
+            raise InvalidThresholdArgumentsError('Threshold value 2 cannot be less than threshold value 1!', self.ImagePath)
+        self.ImageData = cv.threshold(self.ImageData, threshold_value1, threshold_value2, cv.THRESH_BINARY + cv.THRESH_OTSU)[1]
         return self.ImageData
+
+    @add_transformation('canny edge threshold')
+    def canny_edge_threshold(self, threshold_value1:int=125, threshold_value2:int=175, aperture_size:int=3, l2_gradient:bool=False) -> MatLike:
+        '''
+            ! CAN CAUSE POOR RESULTS WITH UNEVEN LIGHTING OR EXCESS NOISE !
+            Detect edges in the image.
+            Arguments:
+                - threshold_value1 : lower limit of the threshold
+                - threshold_value2 : upper limit of the threshold
+        '''
+        if threshold_value2 < threshold_value1:
+            raise InvalidThresholdArgumentsError('Threshold value 1 must be greater than threshold value 2!', self.ImagePath)
+        else:
+            self.ImageData = cv.Canny(self.ImageData, threshold_value1, threshold_value2, apertureSize=aperture_size, L2gradient=l2_gradient)
+            return self.ImageData
 
     @add_transformation('dilate')
     @invert_colors_for_processing
-    def dilate(self, kernel_size:int=5, iterations:int=1) -> cv2.typing.MatLike:
+    def dilate(self, kernel_size:int=3, iterations:int=1) -> MatLike:
         '''
             ! USEFUL TO DILATE AFTER ERODING !
             Increases the boundaries of a foreground object and accentuates features of the image.
@@ -381,12 +417,12 @@ Image Path : {self.ImagePath}
             raise InvalidDilateOrErodeArguments('Number of iterations cannot be greater than or equal to 5!', self.ImagePath)
         else:
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
-            self.ImageData = cv2.dilate(self.ImageData, kernel, iterations=iterations)
+            self.ImageData = cv.dilate(self.ImageData, kernel, iterations=iterations)
             return self.ImageData
 
     @add_transformation('erode')
     @invert_colors_for_processing
-    def erode(self, kernel_size:int=5, iterations:int=1) -> cv2.typing.MatLike:
+    def erode(self, kernel_size:int=3, iterations:int=1) -> MatLike:
         '''
             ! USEFUL TO DILATE AFTER ERODING !
             Decreases the boundaries of a foreground object and diminishes features of the image.
@@ -404,12 +440,12 @@ Image Path : {self.ImagePath}
             raise InvalidDilateOrErodeArguments('Number of iterations cannot be greater than or equal to 5!', self.ImagePath)
         else:
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
-            self.ImageData = cv2.erode(self.ImageData, kernel, iterations=iterations)
+            self.ImageData = cv.erode(self.ImageData, kernel, iterations=iterations)
             return self.ImageData
 
     @add_transformation('open pixels (erode then dilate)')
     @invert_colors_for_processing
-    def open_pixels(self, kernel_size:int=3) -> cv2.typing.MatLike:
+    def open_pixels(self, kernel_size:int=3) -> MatLike:
         '''
             Erosion followed by dilation. Useful in removing noise.
             Arguments:
@@ -423,12 +459,12 @@ Image Path : {self.ImagePath}
             raise InvalidDilateOrErodeArguments('Size of neighborhood cannot be greater than 9!', self.ImagePath)
         else:
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
-            self.ImageData = cv2.morphologyEx(self.ImageData, cv2.MORPH_OPEN, kernel)
+            self.ImageData = cv.morphologyEx(self.ImageData, cv.MORPH_OPEN, kernel)
             return self.ImageData
 
     @add_transformation('close pixels (dilate then erode)')
     @invert_colors_for_processing
-    def close_pixels(self, kernel_size:int=3) -> cv2.typing.MatLike:
+    def close_pixels(self, kernel_size:int=3) -> MatLike:
         '''
             Dilation followed by erosion. Useful in closing small holse inside foreground objects.
             Arguments:
@@ -442,36 +478,29 @@ Image Path : {self.ImagePath}
             raise InvalidDilateOrErodeArguments('Size of neighborhood cannot be greater than 9!', self.ImagePath)
         else:
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
-            self.ImageData = cv2.morphologyEx(self.ImageData, cv2.MORPH_CLOSE, kernel)
+            self.ImageData = cv.morphologyEx(self.ImageData, cv.MORPH_CLOSE, kernel)
             return self.ImageData
 
     @add_transformation('draw contours')
-    def draw_contours(self, contour_area_threshold:int=1000) -> None:
-        self.enlarge_image(scale_x=2, scale_y=2)
-        self.convert_to_grayscale()
-        self.median_blur()
-        self.simple_threshold(threshold_value=170, color_if_less_than_threshold=255)
-        self.open_pixels()
-        self.otsu_threshold()
-        self.display_image()
-        potential_images:list[cv2.typing.MatLike] = []
-        contours = cv2.findContours(self.ImageData, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
-        filtered_contours = [contour for contour in contours if cv2.contourArea(contour) > contour_area_threshold]
-        for contour in filtered_contours:
-            x, y, w, h = cv2.boundingRect(contour)
-            aspect_ratio = float(w) / h
-            if 0.9 <= aspect_ratio <=1.1:
-                potential_images.append(contour)
-        self.reset_image_data()
-        self.enlarge_image(scale_x=2, scale_y=2)
-        mask = np.zeros_like(self.ImageData)
-        grayscale = self.convert_to_grayscale()
+    def draw_contours(self, contour_area_threshold:int=1000) -> MatLike:
+        def filter_contours(image_contours:List[MatLike]) -> List[MatLike]:
+            potential_images:List[MatLike] = []
+            filtered_contours = [contour for contour in image_contours if cv.contourArea(contour) > contour_area_threshold]
+            for contour in filtered_contours:
+                x, y, w, h = cv.boundingRect(contour)
+                aspect_ratio = float(w) / h
+                if 0.9 <= aspect_ratio <=1.1:
+                    potential_images.append(contour)
+            return potential_images
+        contours = cv.findContours(self.ImageData, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)[0]
+        grayscale = cv.cvtColor(self.OriginalImageData, cv.COLOR_BGR2GRAY)
+        mask = np.zeros_like(grayscale)
+        potential_images = filter_contours(contours)
         for contour in potential_images:
-            x, y, w, h = cv2.boundingRect(contour)
-            cv2.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
-        masked_image = cv2.bitwise_and(grayscale, self.ImageData, mask=mask)
-        self.display_image('masked', masked_image)
-
+            x, y, w, h = cv.boundingRect(contour)
+            cv.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
+        masked_image = cv.bitwise_and(grayscale, grayscale, mask=mask)
+        return masked_image
 # error handling definitions
 
 def format_exception_new_lines(exception_class:object, error_message:str, image_to_process_path:ImageToProcess.ImagePath) -> str:
@@ -551,11 +580,28 @@ class TransformationFailedError(Exception):
 
 def main():
     test = ImageToProcess(image_path='recipe_card.jpeg')
-    test.draw_contours(contour_area_threshold=15000)
-    test.display_image()
-    print('\n\n' + test)
+    test.enlarge_image(2, 2)
+    test.convert_to_grayscale()
+    test.gaussian_blur(blur_kernel_size=125, edge_detect=True)
+    test.display_image('gaussian blur')
+    test.otsu_threshold(230, 255)
+    test.close_pixels()
+    test.close_pixels()
+    test.display_image('threshhold and closed and dilated')
+    test.canny_edge_threshold(230, 240, 5, False)
+    test.display_image('canny')
+    masked = test.draw_contours(1000)
+    test.display_image('masked image', masked)
 
 
 
 if __name__ == "__main__":
     main()
+
+
+
+
+'''
+
+'''
+
