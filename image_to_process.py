@@ -482,7 +482,7 @@ Image Path : {self.ImagePath}
             return self.ImageData
 
     @add_transformation('draw contours')
-    def draw_contours(self, contour_area_threshold:int=1000) -> MatLike:
+    def draw_contours(self, contour_area_threshold:int=1000, filter:bool=True) -> MatLike:
         def filter_contours(image_contours:List[MatLike]) -> List[MatLike]:
             potential_images:List[MatLike] = []
             filtered_contours = [contour for contour in image_contours if cv.contourArea(contour) > contour_area_threshold]
@@ -492,10 +492,15 @@ Image Path : {self.ImagePath}
                 if 0.9 <= aspect_ratio <=1.1:
                     potential_images.append(contour)
             return potential_images
-        contours = cv.findContours(self.ImageData, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)[0]
+        contours = cv.findContours(self.ImageData, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)[0]
         grayscale = cv.cvtColor(self.OriginalImageData, cv.COLOR_BGR2GRAY)
         mask = np.zeros_like(grayscale)
-        potential_images = filter_contours(contours)
+        if filter:
+            print('filtering')
+            potential_images = filter_contours(contours)
+        else:
+            print('not filtering')
+            potential_images = contours
         for contour in potential_images:
             x, y, w, h = cv.boundingRect(contour)
             cv.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
@@ -578,19 +583,19 @@ class TransformationFailedError(Exception):
         formatted_custom_error_message = format_exception_new_lines(self, error_message, image_to_process_path)
         super().__init__(original_error_message + formatted_custom_error_message)
 
-def main():
+def mask_over_large_noise_inside_image():
     test = ImageToProcess(image_path='recipe_card.jpeg')
     test.enlarge_image(2, 2)
     test.convert_to_grayscale()
     test.gaussian_blur(blur_kernel_size=125, edge_detect=True)
     test.display_image('gaussian blur')
     test.otsu_threshold(230, 255)
-    test.close_pixels()
-    test.close_pixels()
     test.display_image('threshhold and closed and dilated')
-    test.canny_edge_threshold(230, 240, 5, False)
+    test.canny_edge_threshold(0, 255, 5, False)
     test.display_image('canny')
-    masked = test.draw_contours(1000)
+    test.erode(iterations=3)
+    test.display_image('eroded')
+    masked = test.draw_contours(filter=False)
     test.display_image('masked image', masked)
 
 
