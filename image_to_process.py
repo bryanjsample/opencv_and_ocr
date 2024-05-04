@@ -6,7 +6,6 @@
 '''
 
 import cv2 as cv
-from time import sleep
 from cv2.typing import MatLike
 import numpy as np
 from typing import Callable, List, Tuple, Dict, Any
