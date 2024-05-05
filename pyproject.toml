@@ -1,0 +1,26 @@
+[project]
+name = "PROJECTNAME"
+version = "0.0.1"
+authors = [
+    {name="Bryan Sample", email="bryanjsample@gmail.com"}
+]
+description = "DESCRIPTION"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS"
+]
+
+[project.urls]
+Homepage = "GITLINK"
+
+[project.scripts]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
