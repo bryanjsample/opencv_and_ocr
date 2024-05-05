@@ -5,50 +5,12 @@
     Class definition of ImageToProcess, which enables processing of an image to improve it's readability for Tesseract OCR along with it's decorator functions.
 '''
 
-from exception_handling import TransformationFailedError, InvalidScaleArgumentsError, InvalidBlurArgumentsError, InvalidThresholdArgumentsError, InvalidDilateOrErodeArguments, InvertedColorError, GrayscaleError, InvalidKernelSizeError
+from exception_handling import InvalidScaleArgumentsError, InvalidBlurArgumentsError, InvalidThresholdArgumentsError, InvalidDilateOrErodeArguments, GrayscaleError, InvalidKernelSizeError
+from decorators import invert_colors_for_processing, add_transformation
 import cv2 as cv
 from cv2.typing import MatLike
 import numpy as np
-from typing import Callable, List, Tuple, Dict, Any
-import pytesseract
-from pytesseract import Output
-
-# decorator function definitions
-
-def invert_colors_for_processing(processing_func:Callable) -> Callable:
-    '''Decorator function to invert pixel values, call processing function, then invert pixel values back to original.'''
-    def wrapper_function(image_object:object, *args, **kwargs) -> None:
-        if image_object.InvertedColor is True:
-            pass
-        elif image_object.InvertedColor is False:
-            image_object.ImageData = cv.bitwise_not(image_object.ImageData)
-            image_object.InvertedColor = True
-        else:
-            raise InvertedColorError(error_message='Something has gone wrong with the color inversion decorator. Run debugger for further information.', image_to_process_path=image_object.ImagePath)
-        processing_func(image_object, *args, **kwargs)
-        if image_object.CannyData is True or image_object.LaplacianData is True:
-            pass
-        elif image_object.CannyData is False and image_object.LaplacianData is False:
-            image_object.ImageData = cv.bitwise_not(image_object.ImageData)
-            image_object.InvertedColor = False
-        else:
-            raise InvertedColorError(error_message='Something has gone wrong with the color inversion decorator. Run debugger for further information.', image_to_process_path=image_object.ImagePath)
-    return wrapper_function
-
-def add_transformation(transformation_function_name:str) -> Callable:
-    '''Decorator function to add values into the Transformations property to keep track of which Transformations have been performed on the image.'''
-    def perform_transformation(processing_func:Callable) -> Callable:
-        def wrapper_function(image_object:object, *args, **kwargs) -> None:
-            try:
-                return_val = processing_func(image_object, *args, **kwargs)
-            except Exception as e:
-                print(image_object)
-                raise TransformationFailedError(str(e), '\nThe transformation failed....Run the debugger to investigate further.', image_object.ImagePath)
-            else:
-                image_object.Transformations = (transformation_function_name, args, kwargs)
-            return return_val
-        return wrapper_function
-    return perform_transformation
+from typing import List, Tuple, Dict, Any
 
 def indent(number_of_single_spaces:int=4) -> str:
     return ' ' * number_of_single_spaces

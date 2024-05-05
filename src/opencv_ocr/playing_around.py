@@ -48,12 +48,13 @@ def working_for_recipe_card_jpeg():
     test.display_image('processed with rects')
     # d:dict = pytesseract.image_to_data(test.ImageData, output_type=Output.STRING)
     # print(d)
-    d:dict = pytesseract.image_to_data(test.ImageData, output_type=Output.DICT) # sort image data into dictionary
-    n_boxes = len(d['text'])
-    for i in range(n_boxes):
-        if int(d['conf'][i]) > 60:
-            (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
-            test.ImageData = cv.rectangle(test.ImageData, (x,y), (x+w, y+h), (0,255,0), 2)
+    # d:dict = pytesseract.image_to_data(test.ImageData, output_type=Output.DICT) # sort image data into dictionary
+    # n_boxes = len(d['text'])
+    # for i in range(n_boxes):
+    #     if int(d['conf'][i]) > 60:
+    #         (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
+    #         test.ImageData = cv.rectangle(test.ImageData, (x,y), (x+w, y+h), (0,255,0), 2)
+    d = draw_text_box_outline(test)
     test.display_image('extracted text')
     group_text_by_block(d)
 
@@ -160,6 +161,37 @@ def mask_over_v4(path):
     image.dilate()
     image.display_image()
 
+
+def draw_text_box_outline(image:ImageToProcess, confidence_threshold:int=60) -> list:
+    d:dict = pytesseract.image_to_data(image.ImageData, output_type=Output.DICT) # sort image data into dictionary
+    n_boxes = len(d['text'])
+    drawn_rects:List[Tuple[int]] = []
+    for i in range(n_boxes):
+        if int(d['conf'][i]) > confidence_threshold:
+            (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
+            if w > (image.ImageData.shape[0] / 2) or h > (image.ImageData.shape[1] / 2):
+                continue
+            drawn_rects.append((x,y,w,h))
+            image.ImageData = cv.rectangle(image.ImageData, (x,y), (x+w, y+h), 173, 2)
+    return [d, drawn_rects]
+
+def draw_filled_text_box(image:ImageToProcess, confidence_threshold:int=60) -> list:
+    d:dict = pytesseract.image_to_data(image.ImageData, output_type=Output.DICT) # sort image data into dictionary
+    n_boxes = len(d['text'])
+    drawn_rects:List[Tuple[int]] = []
+    for i in range(n_boxes):
+        if int(d['conf'][i]) > confidence_threshold:
+            (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
+            if w > (image.ImageData.shape[0] / 2) or h > (image.ImageData.shape[1] / 2):
+                continue
+            drawn_rects.append((x,y,w,h))
+            image.ImageData = cv.rectangle(image.ImageData, (x,y), (x+w, y+h), 255, -1)
+    return [d, drawn_rects]
+
+def formatted_tesseract_dict(image:ImageToProcess) -> str:
+    formatted_dict:str = pytesseract.image_to_data(image.ImageData, output_type=Output.STRING)
+    return formatted_dict
+
 def mask_over_v5(path):
     image = ImageToProcess(path)
     image.enlarge_image(2, 2)
@@ -168,11 +200,26 @@ def mask_over_v5(path):
     image.otsu_threshold(200, 255)
     image.laplacian_filter(kernel_size=5)
     image.close_pixels()
-    min_thresh = int((image.OriginalImageData.shape[1]/15)**2)
+    min_thresh = int((image.OriginalImageData.shape[1]/35)**2)
     max_thresh = int((image.OriginalImageData.shape[1]/2)**2)
+    image.draw_contours(min_threshold=min_thresh, max_threshold=max_thresh)
+    image.draw_contours(min_threshold=min_thresh, max_threshold=max_thresh)
     image.draw_contours(min_threshold=min_thresh, max_threshold=max_thresh)
     image.display_image()
 
+def mask_over_v6(path):
+    image = ImageToProcess(path)
+    image.enlarge_image(2, 2)
+    image.convert_to_grayscale()
+    image.canny_edge_threshold(aperture_size=3)
+    image.display_image()
+    good_rects = draw_filled_text_box(image, confidence_threshold=75)[1]
+    image.display_image()
+    formatted_dict = formatted_tesseract_dict(image)
+    print(formatted_dict)
+    for i in good_rects:
+        print(', '.join([str(x) for x in i]))
+
 if __name__ == "__main__":
-    working_for_recipe_card_jpeg()
-    # mask_over_v5('./images/blue_apron.png')
+    # working_for_recipe_card_jpeg()
+    mask_over_v6('./images/blue_apron.png')
