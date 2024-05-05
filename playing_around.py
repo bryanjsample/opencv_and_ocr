@@ -114,9 +114,10 @@ def mask_over_large_noise_inside_image_v3(path):
     test.convert_to_grayscale()
     # test.gaussian_blur(blur_kernel_size=131, edge_detect=True)
     test.display_image('gaussian blur')
-    test.otsu_threshold(0, 255)
+    # test.otsu_threshold(0, 150)
+    test.simple_threshold(240, 255)
     test.display_image('threshhold and closed and dilated')
-    test.canny_edge_threshold(0, 255, 3, True)
+    test.canny_edge_threshold(0, 255, 5, True)
     test.display_image('canny')
     test.erode(iterations=4)
     test.display_image('eroded')
@@ -152,5 +153,18 @@ def mask_over_large_noise_inside_image_v3(path):
     test.display_image('extracted text')
     group_text_by_block(d)
 
+def mask_over_v4(path):
+    image = ImageToProcess('blue_apron.png')
+    image.enlarge_image(2.5, 2.5)
+    image.convert_to_grayscale()
+    image.dilate(iterations=3)
+    image.adaptive_threshold(kernel_size=15)
+    image.display_image()
+    image.close_pixels()
+    image.gaussian_blur(81, edge_detect=True)
+    image.canny_edge_threshold(threshold_value1=100, threshold_value2=255, aperture_size=7, l2_gradient=True)
+    image.dilate()
+    image.display_image()
+
 if __name__ == "__main__":
-    mask_over_large_noise_inside_image_v3('Blue_apron.png')
+    mask_over_v4('Blue_apron.png')

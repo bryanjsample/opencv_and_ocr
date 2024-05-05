@@ -17,11 +17,21 @@ from pytesseract import Output
 def invert_colors_for_processing(processing_func:Callable) -> Callable:
     '''Decorator function to invert pixel values, call processing function, then invert pixel values back to original.'''
     def wrapper_function(image_object:object, *args, **kwargs) -> None:
-        image_object.ImageData = cv.bitwise_not(image_object.ImageData)
-        image_object.InvertedColor = True
+        if image_object.InvertedColor is True:
+            pass
+        elif image_object.InvertedColor is False:
+            image_object.ImageData = cv.bitwise_not(image_object.ImageData)
+            image_object.InvertedColor = True
+        else:
+            raise InvertedColorError(error_message='Something has gone wrong with the color inversion decorator. Run debugger for further information.', image_to_process_path=image_object.ImagePath)
         processing_func(image_object, *args, **kwargs)
-        image_object.ImageData = cv.bitwise_not(image_object.ImageData)
-        image_object.InvertedColor = False
+        if image_object.CannyData is True:
+            pass
+        elif image_object.CannyData is False:
+            image_object.ImageData = cv.bitwise_not(image_object.ImageData)
+            image_object.InvertedColor = False
+        else:
+            raise InvertedColorError(error_message='Something has gone wrong with the color inversion decorator. Run debugger for further information.', image_to_process_path=image_object.ImagePath)
     return wrapper_function
 
 def add_transformation(transformation_function_name:str) -> Callable:
@@ -54,6 +64,7 @@ class ImageToProcess():
         self._image_path:str = image_path
         self._image_data:List[MatLike] = [cv.imread(image_path), cv.imread(image_path)]
         self._inverted_color:bool = False
+        self._canny_data:bool = False
         self._transformations:Dict[int, Tuple[str, List[Tuple[Any]|Dict[str, Any]]]]|None = None
 
     @property
@@ -78,6 +89,13 @@ class ImageToProcess():
     @InvertedColor.setter
     def InvertedColor(self, bool_value:bool) -> None:
         self._inverted_color = bool_value
+
+    @property
+    def CannyData(self) -> bool:
+        return self._canny_data
+    @CannyData.setter
+    def CannyData(self, bool_value:bool) -> None:
+        self._canny_data = bool_value
 
     @property
     def Transformations(self) -> Dict[int, Tuple[str, List[Tuple[Any]|Dict[str, Any]]]]|None:
@@ -343,18 +361,15 @@ Image Path : {self.ImagePath}
         return self.ImageData
 
     @add_transformation('simple threshold')
-    def simple_threshold(self, threshold_value1:int=127, threshold_value2:int=255) -> MatLike:
+    def simple_threshold(self, threshold_value:int=127, color_value_if_less_than_threshold:int=255) -> MatLike:
         '''
             If the pixel value is greater than the threshold, it becomes black. If less, it becomes threshold_value2.
             Arguments:
-                - threshold_value1 : if average value of pixel exceeds this, it becomes black.
-                - threshold_value2 : grayscale value to set pixel if less than threshold_value
+                - threshold_value : if average value of pixel exceeds this, it becomes black.
+                - color_value_if_less_than_threshold : grayscale value to set pixel if less than threshold_value
         '''
-        if threshold_value1 >= threshold_value2:
-            raise InvalidThresholdArgumentsError('Threshold value 2 cannot be less than threshold value 1!', self.ImagePath)
-        else:
-            self.ImageData = cv.threshold(self.ImageData, threshold_value1, threshold_value2, cv.THRESH_BINARY)[1]
-            return self.ImageData
+        self.ImageData = cv.threshold(self.ImageData, threshold_value, color_value_if_less_than_threshold, cv.THRESH_BINARY)[1]
+        return self.ImageData
 
     @add_transformation('adaptive threshold')
     def adaptive_threshold(self, color_if_less_than_threshold:int=255, kernel_size:int=31, constant:int=2) -> MatLike:
@@ -397,6 +412,8 @@ Image Path : {self.ImagePath}
             raise InvalidThresholdArgumentsError('Threshold value 1 must be greater than threshold value 2!', self.ImagePath)
         else:
             self.ImageData = cv.Canny(self.ImageData, threshold_value1, threshold_value2, apertureSize=aperture_size, L2gradient=l2_gradient)
+            self.InvertedColor = True
+            self.CannyData = True
             return self.ImageData
 
     @add_transformation('dilate')
@@ -607,6 +624,17 @@ class TransformationFailedError(Exception):
         '''
         formatted_custom_error_message = format_exception_new_lines(self, error_message, image_to_process_path)
         super().__init__(original_error_message + formatted_custom_error_message)
+
+class InvertedColorError(Exception):
+    ''''''
+    def __init__(self, error_message:str, image_to_process_path:ImageToProcess.ImagePath) -> None:
+        '''
+            FUNCTIONDOCSTRING
+            Arguments:
+                -
+        '''
+        formatted_error_message = format_exception_new_lines(self, error_message, image_to_process_path)
+        super().__init__(formatted_error_message)
 
 
 
