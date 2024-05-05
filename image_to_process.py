@@ -500,8 +500,8 @@ Image Path : {self.ImagePath}
             return filtered_contours
         __methods:Dict[str, Any] = {
                 'external' : cv.RETR_EXTERNAL, # retrieves only external colors, disregarding any contours inside the objects
-                'list' : cv.RETR_LIST, # retrives all contours without any hierarcht
-                'ccomp' : cv.RETR_CCOMP, # retrieves all contours and organizes them into a two-lvel hierarchy. Top level contains the outer boundaries of the objects, and the second level contains the boundaries of the inner holes
+                'list' : cv.RETR_LIST, # retrives all contours without any hierarchy
+                'ccomp' : cv.RETR_CCOMP, # retrieves all contours and organizes them into a two-level hierarchy. Top level contains the outer boundaries of the objects, and the second level contains the boundaries of the inner holes
                 'tree' : cv.RETR_TREE # retrives all the contours and reconstructs a full hierarchy of nestted contours
         }
         __modes:Dict[str, Any] = {
