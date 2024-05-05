@@ -1,0 +1,48 @@
+extracted text 
+
+Image Path : ./images/recipe_card.jpeg
+    self.ImageData.shape=(6034, 4746)
+    self.ImageData.dtype=dtype('uint8')
+    self.OriginalImageData.shape=(6034, 4746, 3)
+    self.OriginalImageData.dtype=dtype('uint8')
+
+Transformations Performed:
+0  | enlarge image                        | arguments : 2, 2              | keywords :                     
+1  | convert to grayscale                 | arguments :                   | keywords :                     
+2  | gaussian blur                        | arguments :                   | keywords : edge_detect = True  
+3  | otsu threshold                       | arguments : 0, 255            | keywords :                     
+4  | canny edge threshold                 | arguments : 0, 255, 5, True   | keywords :                     
+5  | dilate                               | arguments :                   | keywords : iterations = 3      
+6  | draw contours                        | arguments :                   | keywords : contour_mode = none 
+7  | draw contours                        | arguments :                   | keywords : contour_mode = none 
+8  | enlarge image                        | arguments : 2, 2              | keywords :                     
+9  | reset and add rectangles to original | arguments :                   | keywords :                     
+10 | convert to grayscale                 | arguments :                   | keywords :                     
+11 | bilateral filter blur                | arguments :                   | keywords : blur_kernel_size = 5
+12 | otsu threshold                       | arguments : 230, 255          | keywords :                     
+13 | close pixels (dilate then erode)     | arguments :                   | keywords :                     
+14 | dilate                               | arguments :                   | keywords :                     
+15 | bilateral filter blur                | arguments :                   | keywords : blur_kernel_size = 1
+16 | otsu threshold                       | arguments : 230, 255          | keywords :                     
+
+2  |  JAPANESE CHICKEN YAKITORI
+3  |  With Baby Bok Choy Slaw INGREDIENTS WHAT YOU NEED » Slaw Mix (2% 02) = Kosher Salt * Minin (1% Tbsp.) » Black Pepper = Skewers (6) * Cooking Spray = Sesame Seeds (2 Tsp.) e Grill or Grill Pan e Cilantro Sprigs (4) * Lime (1) DRINK PAIRING * Baby Bok Choy (2 Heads) = Chilled Japanese-Style Lager, like = Soy Sauce (1 0z) Sapporo « Brown Sugar (1% Tbsp.) = Cold Sake = Chicken Breasts (2) = Iced Green Tea with Mint \" oe PREPARE THE VEGETABLES MARINATE THE CHICKEN
+4  |  PREPARE THE SKEWERS
+5  |  s Inaclean mixing bowl, combine the soy sauce, half the brown sugar, and half the mirin. * Place the chicken pieces in the marinade, ensuring they're completely coated, and allow to marinate for 15 minutes.
+6  |  Rinse bok choy and remove the root. Julienne the remaining white part and leaves.
+7  |  Rinse the cilantro and remove leaves from stem. Rinse and quarter the lime
+8  |  Rinse the chicken, pat dry, and cut into 1-inch pieces.
+9  |  Submerge skewers in water for 5 minutes before using (this prevents them from burning).
+10  |  COOK THE CHICKEN
+11  |  = Warm the grill pan or grill (or if you don't have a grill, you can use a skillet) to medium-high heat. ® Spray grill with cooking spray to ensure skewers do not stick. ® Once hot, add chicken skewers to grill and cook on each side, flipping occasionally, for 4-5 minutes, or until caramelized and firm.
+12  |  » Cut into chicken to ensure doneness.
+13  |  Once chicken pieces have mannated, spear 3-4 pieces on each skewer.
+14  |  f ¥ Share a photo of your fhomechef creation for a chance to win your next 4 servings on us!
+15  |  367 calories per serving 40 minutes to prepare
+16  |  dairy-free
+17  |  MAKE THE SLAW
+18  |  » Inaseparate mixing bowl, combine the slaw mix, bok choy, half the cilantro, remaining mirin, remaining brown sugar, juice of the lime to taste (add juice from a quarter at a time to gauge desired tartness), and half the sesame seeds.
+19  |  « Mix and add salt and pepper to taste. « Let sit at room temperature before serving.
+20  |  PLATE THE DISH
+21  |  » Add a serving of slaw to the plate. = Nestle 2-3 skewers against the slaw. * Garnish with remaining sesame seeds, remaining cilantro leaves, and any remaining lime wedges.
+22  |  HomeChef.com

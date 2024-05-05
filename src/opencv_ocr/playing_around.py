@@ -168,6 +168,9 @@ def mask_over_v5(path):
     image.otsu_threshold(200, 255)
     image.laplacian_filter(kernel_size=5)
     image.close_pixels()
+    min_thresh = int((image.OriginalImageData.shape[1]/15)**2)
+    max_thresh = int((image.OriginalImageData.shape[1]/2)**2)
+    image.draw_contours(min_threshold=min_thresh, max_threshold=max_thresh)
     image.display_image()
 
 if __name__ == "__main__":

@@ -586,7 +586,19 @@ Image Path : {self.ImagePath}
         '''
             FUNCTIONDOCSTRING
             Arguments:
-                -
+                - kernel_size : 
+                - desired_depth : 
+                - laplacian_scale : 
+                - delta : 
+                - border type : string correlating to a key in the _border_types dictionary
+                    - 'default' : cv.BORDER_DEFAULT
+                    - 'constant' : cv.BORDER_CONSTANT
+                    - 'isolated' : cv.BORDER_ISOLATED
+                    - 'replicate' : cv.BORDER_REPLICATE
+                    - 'reflect' : cv.BORDER_REFLECT
+                    - 'wrap' : cv.BORDER_WRAP
+                    - 'reflect_101' : cv.BORDER_REFLECT_101
+                    - 'transparent' : cv.BORDER_TRANSPARENT
         '''
         _border_types:dict[str, Any] = {
                 'default' : cv.BORDER_DEFAULT,
@@ -612,13 +624,25 @@ Image Path : {self.ImagePath}
         '''
             FUNCTIONDOCSTRING
             Arguments:
-                -
+                - min_threshold: minimum area of a contour to be included
+                - max_threshold :maximum area of a contour to be include
+                - contour_method : string correlating to a key in _methods dictionary
+                    - 'external' : cv.RETR_EXTERNAL | retrieves only external colors, disregarding any contours inside the objects
+                    - 'list' : cv.RETR_LIST | retrives all contours without any hierarchy
+                    - 'ccomp' : cv.RETR_CCOMP | retrieves all contours and organizes them into a two-level hierarchy. Top level contains the outer boundaries of the objects, and the second level contains the boundaries of the inner holes
+                    - 'tree' : cv.RETR_TREE | retrives all the contours and reconstructs a full hierarchy of nestted contours
+                - contour_mode : string correlating to a key in _modes dictionary
+                    - 'none' : cv.CHAIN_APPROX_NONE | stores all contours points without approximating any of them
+                    - 'simple' : cv.CHAIN_APPROX_SIMPLE | compress horizontal, vertical, and diagonal segments and leaves only their endpoints. If a contour is straight, only the endpoints are stores
+                    - 'tc89_li' : cv.CHAIN_APPROX_TC89_L1 | variant of douglas-peucker algorithm
+                    - 'tc9_kcos' : cv.CHAIN_APPROX_TC89_KCOS  | variant of douglas-peucker algorithm
+                - filter : boolean value to determine whether or not to filter contours based on threshold values
         '''
         def filter_contours(image_contours:List[MatLike]) -> List[MatLike]:
             '''
                 FUNCTIONDOCSTRING
                 Arguments:
-                    -
+                    - image_contours : list of all contours in the image
             '''
             filtered_contours = [contour for contour in image_contours if cv.contourArea(contour) > min_threshold and cv.contourArea(contour) < max_threshold]
             return filtered_contours
@@ -636,7 +660,6 @@ Image Path : {self.ImagePath}
         }
         _method = _methods.get(contour_method, cv.RETR_TREE)
         _mode = _modes.get(contour_mode, cv.CHAIN_APPROX_SIMPLE)
-        print(f'{_method=}', f'{_mode=}', sep='\n\n')
         contours = cv.findContours(self.ImageData, _method, _mode)[0]
         grayscale = cv.cvtColor(self.OriginalImageData, cv.COLOR_BGR2GRAY)
         mask = np.zeros_like(grayscale)
@@ -647,12 +670,9 @@ Image Path : {self.ImagePath}
         rect_info = []
         for contour in potential_images:
             x, y, w, h = cv.boundingRect(contour)
-            if y < (self.ImageData.shape[0] / 5) and y > (self.ImageData.shape[0] / 12):
-                continue
-            else:
-                r_info = [x, y, w, h]
-                rect_info.append(r_info)
-                cv.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
+            r_info = [x, y, w, h]
+            rect_info.append(r_info)
+            cv.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
             cv.bitwise_and(self.ImageData, self.ImageData, mask=mask)
         self.MaskRectInfo = rect_info
         self.MaskRectScale = (self.ScaleX, self.ScaleY)
