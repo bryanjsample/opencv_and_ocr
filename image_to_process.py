@@ -512,6 +512,7 @@ Image Path : {self.ImagePath}
         }
         __method = __methods.get(contour_method, cv.RETR_TREE)
         __mode = __modes.get(contour_mode, cv.CHAIN_APPROX_SIMPLE)
+        print(f'{__method=}', f'{__mode=}', sep='\n\n')
         contours = cv.findContours(self.ImageData, __method, __mode)[0]
         grayscale = cv.cvtColor(self.OriginalImageData, cv.COLOR_BGR2GRAY)
         mask = np.zeros_like(grayscale)
