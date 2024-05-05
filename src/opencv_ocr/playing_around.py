@@ -1,10 +1,9 @@
 import cv2 as cv
-from cv2.typing import MatLike
-import numpy as np
-from typing import Callable, List, Tuple, Dict, Any
+from typing import List, Dict
 import pytesseract
 from pytesseract import Output
 from image_to_process import ImageToProcess
+from image_to_extract import ImageToExtract
 
 
 def group_text_by_block(d):
@@ -20,7 +19,7 @@ def group_text_by_block(d):
         print(key, ' '.join(value), sep='  |  ')
 
 def working_for_recipe_card_jpeg():
-    test = ImageToProcess('./images/recipe_card.jpeg')
+    test = ImageToExtract('./images/recipe_card.jpeg')
     test.enlarge_image(2, 2)
     test.convert_to_grayscale()
     test.gaussian_blur(blur_kernel_size=131, edge_detect=True)
@@ -54,7 +53,7 @@ def working_for_recipe_card_jpeg():
     #     if int(d['conf'][i]) > 60:
     #         (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
     #         test.ImageData = cv.rectangle(test.ImageData, (x,y), (x+w, y+h), (0,255,0), 2)
-    d = draw_text_box_outline(test)
+    d = test.draw_text_box_outline(test)
     test.display_image('extracted text')
     group_text_by_block(d)
 
@@ -161,37 +160,6 @@ def mask_over_v4(path):
     image.dilate()
     image.display_image()
 
-
-def draw_text_box_outline(image:ImageToProcess, confidence_threshold:int=60) -> list:
-    d:dict = pytesseract.image_to_data(image.ImageData, output_type=Output.DICT) # sort image data into dictionary
-    n_boxes = len(d['text'])
-    drawn_rects:List[Tuple[int]] = []
-    for i in range(n_boxes):
-        if int(d['conf'][i]) > confidence_threshold:
-            (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
-            if w > (image.ImageData.shape[0] / 2) or h > (image.ImageData.shape[1] / 2):
-                continue
-            drawn_rects.append((x,y,w,h))
-            image.ImageData = cv.rectangle(image.ImageData, (x,y), (x+w, y+h), 173, 2)
-    return [d, drawn_rects]
-
-def draw_filled_text_box(image:ImageToProcess, confidence_threshold:int=60) -> list:
-    d:dict = pytesseract.image_to_data(image.ImageData, output_type=Output.DICT) # sort image data into dictionary
-    n_boxes = len(d['text'])
-    drawn_rects:List[Tuple[int]] = []
-    for i in range(n_boxes):
-        if int(d['conf'][i]) > confidence_threshold:
-            (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
-            if w > (image.ImageData.shape[0] / 2) or h > (image.ImageData.shape[1] / 2):
-                continue
-            drawn_rects.append((x,y,w,h))
-            image.ImageData = cv.rectangle(image.ImageData, (x,y), (x+w, y+h), 255, -1)
-    return [d, drawn_rects]
-
-def formatted_tesseract_dict(image:ImageToProcess) -> str:
-    formatted_dict:str = pytesseract.image_to_data(image.ImageData, output_type=Output.STRING)
-    return formatted_dict
-
 def mask_over_v5(path):
     image = ImageToProcess(path)
     image.enlarge_image(2, 2)
@@ -208,14 +176,14 @@ def mask_over_v5(path):
     image.display_image()
 
 def mask_over_v6(path):
-    image = ImageToProcess(path)
+    image = ImageToExtract(path)
     image.enlarge_image(2, 2)
-    image.convert_to_grayscale()
-    image.canny_edge_threshold(aperture_size=3)
+    # image.convert_to_grayscale()
+    # image.canny_edge_threshold(aperture_size=3)
+    # image.display_image()
+    good_rects = image.draw_filled_text_box(confidence_threshold=30)[1]
     image.display_image()
-    good_rects = draw_filled_text_box(image, confidence_threshold=75)[1]
-    image.display_image()
-    formatted_dict = formatted_tesseract_dict(image)
+    formatted_dict = image.formatted_tesseract_dict()
     print(formatted_dict)
     for i in good_rects:
         print(', '.join([str(x) for x in i]))
