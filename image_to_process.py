@@ -484,7 +484,7 @@ Image Path : {self.ImagePath}
             return self.ImageData
 
     @add_transformation('draw contours')
-    def draw_contours(self, min_threshold:int=1_000, max_threshold:int=500_000, filter:bool=True) -> List[List[int]]:
+    def draw_contours(self, min_threshold:int=1_000, max_threshold:int=500_000, contour_method:str='tree', contour_mode:str='simple', filter:bool=True,) -> List[List[int]]:
         '''
             FUNCTIONDOCSTRING
             Arguments:
@@ -498,7 +498,21 @@ Image Path : {self.ImagePath}
             '''
             filtered_contours = [contour for contour in image_contours if cv.contourArea(contour) > min_threshold and cv.contourArea(contour) < max_threshold]
             return filtered_contours
-        contours = cv.findContours(self.ImageData, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)[0]
+        __methods:Dict[str, Any] = {
+                'external' : cv.RETR_EXTERNAL, # retrieves only external colors, disregarding any contours inside the objects
+                'list' : cv.RETR_LIST, # retrives all contours without any hierarcht
+                'ccomp' : cv.RETR_CCOMP, # retrieves all contours and organizes them into a two-lvel hierarchy. Top level contains the outer boundaries of the objects, and the second level contains the boundaries of the inner holes
+                'tree' : cv.RETR_TREE # retrives all the contours and reconstructs a full hierarchy of nestted contours
+        }
+        __modes:Dict[str, Any] = {
+                'none' : cv.CHAIN_APPROX_NONE, # stores all contours points without approximating any of them
+                'simple' : cv.CHAIN_APPROX_SIMPLE, # compress horizontal, vertical, and diagonal segments and leaves only their endpoints. If a contour is straight, only the endpoints are stores
+                'tc89_li' : cv.CHAIN_APPROX_TC89_L1, # variant of douglas-peucker algorithm
+                'tc9_kcos' : cv.CHAIN_APPROX_TC89_KCOS  # variant of douglas-peucker algorithm
+        }
+        __method = __methods.get(contour_method, cv.RETR_TREE)
+        __mode = __modes.get(contour_mode, cv.CHAIN_APPROX_SIMPLE)
+        contours = cv.findContours(self.ImageData, __method, __mode)[0]
         grayscale = cv.cvtColor(self.OriginalImageData, cv.COLOR_BGR2GRAY)
         mask = np.zeros_like(grayscale)
         if filter:
@@ -593,63 +607,5 @@ class TransformationFailedError(Exception):
         formatted_custom_error_message = format_exception_new_lines(self, error_message, image_to_process_path)
         super().__init__(original_error_message + formatted_custom_error_message)
 
-def mask_over_large_noise_inside_image(path):
-    test = ImageToProcess(image_path=path)
-    test.enlarge_image(2, 2)
-    test.convert_to_grayscale()
-    test.gaussian_blur(blur_kernel_size=131, edge_detect=True)
-    # test.display_image('gaussian blur')
-    test.otsu_threshold(0, 255)
-    # test.display_image('threshhold and closed and dilated')
-    test.canny_edge_threshold(0, 255, 5, True)
-    # test.display_image('canny')
-    test.erode(iterations=3)
-    # test.display_image('eroded')
-    min_thresh = int((test.OriginalImageData.shape[1]/30)**2)
-    max_thresh = int((test.OriginalImageData.shape[1]/2)**2)
-    test.draw_contours(min_threshold=min_thresh, max_threshold=max_thresh)
-    rect_info = test.draw_contours(min_threshold=min_thresh, max_threshold=max_thresh)
-    # test.display_image('masked image')
-    test.reset_image_data()
-    test.enlarge_image(2,2)
-    print(rect_info)
-    buffer = int(test.ImageData.shape[1] * .006)
-    for rect in rect_info:
-        x, y, w, h = rect
-        cv.rectangle(test.ImageData, (x, y), (x + w + buffer*5, y + h + buffer), (255,255,255), -1)
-    # test.display_image('original grayscale with rects', test.ImageData)
-    test.convert_to_grayscale()
-    test.bilateral_filter_blur(blur_kernel_size=5)
-    test.otsu_threshold(230,255)
-    test.close_pixels()
-    test.dilate()
-    test.bilateral_filter_blur(blur_kernel_size=1)
-    test.otsu_threshold(230,255)
-    # test.display_image('processed with rects')
-    # d:dict = pytesseract.image_to_data(test.ImageData, output_type=Output.STRING)
-    # print(d)
-    d:dict = pytesseract.image_to_data(test.ImageData, output_type=Output.DICT) # sort image data into dictionary
-    n_boxes = len(d['text'])
-    for i in range(n_boxes):
-        if int(d['conf'][i]) > 60:
-            (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
-            test.ImageData = cv.rectangle(test.ImageData, (x,y), (x+w, y+h), (0,255,0), 2)
-    test.display_image('extracted text')
-    group_text_by_block(d)
 
-def group_text_by_block(d):
-    grouped_text:Dict[str, List[str]] = {}
-    for i, text in enumerate(d['text']):
-        if text.strip():  # Skip empty text
-            block_num = d['block_num'][i]
-            block_key = f'{block_num}'
-            if block_key not in grouped_text:
-                grouped_text[block_key] = []
-            grouped_text[block_key].append(text)
-    for key, value in grouped_text.items():
-        print(key, ' '.join(value), sep='  |  ')
-
-
-if __name__ == "__main__":
-    mask_over_large_noise_inside_image('recipe_card.jpeg')
 
