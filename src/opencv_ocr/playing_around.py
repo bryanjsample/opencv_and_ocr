@@ -19,8 +19,8 @@ def group_text_by_block(d):
     for key, value in grouped_text.items():
         print(key, ' '.join(value), sep='  |  ')
 
-def mask_over_large_noise_inside_image_v1(path):
-    test = ImageToProcess(image_path=path)
+def working_for_recipe_card_jpeg():
+    test = ImageToProcess('./images/recipe_card.jpeg')
     test.enlarge_image(2, 2)
     test.convert_to_grayscale()
     test.gaussian_blur(blur_kernel_size=131, edge_detect=True)
@@ -29,20 +29,14 @@ def mask_over_large_noise_inside_image_v1(path):
     test.display_image('threshhold and closed and dilated')
     test.canny_edge_threshold(0, 255, 5, True)
     test.display_image('canny')
-    test.erode(iterations=3)
-    test.display_image('eroded')
+    test.dilate(iterations=3)
+    test.display_image('dilate')
     min_thresh = int((test.OriginalImageData.shape[1]/30)**2)
     max_thresh = int((test.OriginalImageData.shape[1]/2)**2)
     test.draw_contours(min_threshold=min_thresh, max_threshold=max_thresh, contour_method='external', contour_mode='none')
     rect_info = test.draw_contours(min_threshold=min_thresh, max_threshold=max_thresh, contour_method='external', contour_mode='none')
     test.display_image('masked image')
-    test.reset_image_data()
-    test.enlarge_image(2,2)
-    print(rect_info)
-    buffer = int(test.ImageData.shape[1] * .006)
-    for rect in rect_info:
-        x, y, w, h = rect
-        cv.rectangle(test.ImageData, (x, y), (x + w + buffer*5, y + h + buffer), (255,255,255), -1)
+    test.reset_and_add_recangles()
     test.display_image('original grayscale with rects', test.ImageData)
     test.convert_to_grayscale()
     test.bilateral_filter_blur(blur_kernel_size=5)
@@ -63,7 +57,7 @@ def mask_over_large_noise_inside_image_v1(path):
     test.display_image('extracted text')
     group_text_by_block(d)
 
-def mask_over_large_noise_inside_image_v2(path):
+def mask_over_v2(path):
     test = ImageToProcess(image_path=path)
     test.enlarge_image(2, 2)
     test.convert_to_grayscale()
@@ -108,7 +102,7 @@ def mask_over_large_noise_inside_image_v2(path):
     test.display_image('extracted text')
     group_text_by_block(d)
 
-def mask_over_large_noise_inside_image_v3(path):
+def mask_over_v3(path):
     test = ImageToProcess(image_path=path)
     test.enlarge_image(2, 2)
     test.convert_to_grayscale()
@@ -170,13 +164,12 @@ def mask_over_v5(path):
     image = ImageToProcess(path)
     image.enlarge_image(2, 2)
     image.convert_to_grayscale()
-    image.gaussian_blur()
-    image.laplacian_filter()
-    image.close_pixels()
-    image.display_image()
-    image.invert_color()
+    image.gaussian_blur(blur_kernel_size=15, edge_detect=True)
+    image.otsu_threshold(200, 255)
+    image.laplacian_filter(kernel_size=5)
     image.close_pixels()
     image.display_image()
 
 if __name__ == "__main__":
-    mask_over_v5('./images/blue_apron.png')
+    working_for_recipe_card_jpeg()
+    # mask_over_v5('./images/blue_apron.png')

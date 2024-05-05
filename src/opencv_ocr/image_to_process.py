@@ -2,10 +2,10 @@
     image_to_process.py
     Author : Bryan Sample
 
-    Class definition of ImageToProcess, which enables processing of an image to improve it's readability for Tesseract OCR
+    Class definition of ImageToProcess, which enables processing of an image to improve it's readability for Tesseract OCR along with it's decorator functions.
 '''
 
-from exception_handling import TransformationFailedError, InvalidScaleArgumentsError, InvalidBlurArgumentsError, InvalidThresholdArgumentsError, InvalidDilateOrErodeArguments, InvertedColorError
+from exception_handling import TransformationFailedError, InvalidScaleArgumentsError, InvalidBlurArgumentsError, InvalidThresholdArgumentsError, InvalidDilateOrErodeArguments, InvertedColorError, GrayscaleError, InvalidKernelSizeError
 import cv2 as cv
 from cv2.typing import MatLike
 import numpy as np
@@ -64,10 +64,15 @@ class ImageToProcess():
         '''
         self._image_path:str = image_path
         self._image_data:List[MatLike] = [cv.imread(image_path), cv.imread(image_path)]
+        self._scale_x:float = 1.0
+        self._scale_y:float = 1.0
+        self._grayscale:bool = False
         self._inverted_color:bool = False
         self._canny_data:bool = False
         self._laplacian_data:bool = False
         self._transformations:Dict[int, Tuple[str, List[Tuple[Any]|Dict[str, Any]]]]|None = None
+        self._mask_rectangles:List[List[int]]|None = None
+        self._mask_rect_scale:Tuple[float] = (1.0, 1.0)
 
     @property
     def ImagePath(self) -> str:
@@ -84,6 +89,27 @@ class ImageToProcess():
     @ImageData.setter
     def ImageData(self, new_data_value:MatLike) -> None:
         self._image_data[1] = new_data_value
+
+    @property
+    def ScaleX(self) -> float:
+        return self._scale_x
+    @ScaleX.setter
+    def ScaleX(self, new_scale:float) -> None:
+        self._scale_x = new_scale
+
+    @property
+    def ScaleY(self) -> float:
+        return self._scale_y
+    @ScaleY.setter
+    def ScaleY(self, new_scale:float) -> None:
+        self._scale_y = new_scale
+
+    @property
+    def Grayscale(self) -> bool:
+        return self._grayscale
+    @Grayscale.setter
+    def Grayscale(self, bool_value:bool) -> None:
+        self._grayscale = bool_value
 
     @property
     def InvertedColor(self) -> bool:
@@ -150,12 +176,12 @@ class ImageToProcess():
                         kwarg_str = f'{kwargs[i]} = {values[i]}'
                     current.append(kwarg_str)
                 formatted_kwargs.append(', '.join([kw for kw in current if kw !='None']))
-            return [kwarg_str if kwarg_str != '' else 'None' for kwarg_str in formatted_kwargs]
+            return [kwarg_str if kwarg_str != '' else '' for kwarg_str in formatted_kwargs]
         def format_args(args_list:List[Tuple|str]) -> List[str]:
             formatted_args:List[str] = []
             for args in args_list:
                 if args == 'None':
-                    formatted_args.append(args)
+                    formatted_args.append('')
                 else:
                     formatted_args.append(', '.join([str(arg) for arg in args]))
             return formatted_args
@@ -189,6 +215,20 @@ class ImageToProcess():
         # form a list of lines, one for each transformation
         transformation_lines = [f'{transformation_numbers[i]: <{number_align}} | {transformation_function_names[i]: <{name_align}} | arguments : {formatted_args[i]: <{arg_align}} | keywords : {formatted_kwargs[i]: <{kwarg_align}}' for i in range(len(transformation_numbers))]
         return f'Transformations Performed:\n{'\n'.join(transformation_lines)}' # return joined lines
+
+    @property
+    def MaskRectInfo(self) -> List[List[int]]|None:
+        return self._mask_rectangles
+    @MaskRectInfo.setter
+    def MaskRectInfo(self, rect_info:List[List[int]]) -> None:
+        self._mask_rectangles = rect_info
+
+    @property
+    def MaskRectScale(self) -> Tuple[float]:
+        return self._mask_rect_scale
+    @MaskRectScale.setter
+    def MaskRectScale(self, new_scale:Tuple[float]) -> None:
+        self._mask_rect_scale = new_scale
 
     def __str__(self) -> str:
         '''
@@ -244,13 +284,17 @@ Image Path : {self.ImagePath}
 '''
         return string_representation
 
-    def reset_image_data(self) -> None:
+    def reset_image_data(self, retain_transformations:bool=False) -> None:
         self._image_data[0] = cv.imread(self.ImagePath)
         self.ImageData = cv.imread(self.ImagePath)
+        self.ScaleX = 1.0
+        self.ScaleY = 1.0
+        self.Grayscale = False
         self.InvertedColor = False
         self.CannyData = False
         self.LaplacianData = False
-        self._transformations = None
+        if not retain_transformations:
+            self._transformations = None
 
     def display_image(self, title:str|None=None, image:MatLike|None=None) -> MatLike:
         if title is None:
@@ -276,6 +320,7 @@ Image Path : {self.ImagePath}
         else:
             self.ImageData = cv.resize(self.ImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_AREA)
             self._image_data[0] = cv.resize(self.OriginalImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_AREA)
+            self.ScaleX, self.ScaleY = scale_x, scale_y
             return self.ImageData
 
     @add_transformation('enlarge image')
@@ -291,6 +336,7 @@ Image Path : {self.ImagePath}
         else:
             self.ImageData = cv.resize(self.ImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_CUBIC)
             self._image_data[0] = cv.resize(self.OriginalImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_CUBIC)
+            self.ScaleX, self.ScaleY = scale_x, scale_y
             return self.ImageData
 
     @add_transformation('convert to grayscale')
@@ -300,7 +346,13 @@ Image Path : {self.ImagePath}
             Arguments:
                 -
         '''
-        self.ImageData = cv.cvtColor(self.ImageData, cv.COLOR_BGR2GRAY)
+        if self.Grayscale is True:
+            raise GrayscaleError('Color is already grayscale. No need to convert.', self.ImagePath)
+        elif self.Grayscale is False:
+            self.ImageData = cv.cvtColor(self.ImageData, cv.COLOR_BGR2GRAY)
+            self.Grayscale = True
+        else:
+            raise GrayscaleError('Something went wrong with the grayscale error. Figure that out')
         return self.ImageData
 
     @add_transformation('inverted colors')
@@ -326,7 +378,7 @@ Image Path : {self.ImagePath}
         if edge_detect:
             pass
         elif blur_kernel_size % 2 != 1:
-            raise InvalidBlurArgumentsError('Blur kernel size must be odd!', self.ImagePath, kernel_size_error=True)
+            raise InvalidKernelSizeError('Blur kernel size must be odd!', self.ImagePath)
         elif blur_kernel_size > 9:
             raise InvalidBlurArgumentsError('Blur kernel size cannot be greater than 9!', self.ImagePath)
         self.ImageData = cv.blur(self.ImageData, (blur_kernel_size, blur_kernel_size))
@@ -343,7 +395,7 @@ Image Path : {self.ImagePath}
         if edge_detect:
             pass
         elif blur_kernel_size % 2 != 1:
-            raise InvalidBlurArgumentsError('Blur kernel size must be odd!', self.ImagePath, kernel_size_error=True)
+            raise InvalidKernelSizeError('Blur kernel size must be odd!', self.ImagePath)
         elif blur_kernel_size > 9:
             raise InvalidBlurArgumentsError('Blur kernel size cannot be greater than 9!', self.ImagePath)
         if sigma_space > 3:
@@ -363,7 +415,7 @@ Image Path : {self.ImagePath}
         if edge_detect:
             pass
         elif blur_kernel_size % 2 != 1:
-            raise InvalidBlurArgumentsError('Blur kernel size must be odd!', self.ImagePath, kernel_size_error=True)
+            raise InvalidKernelSizeError('Blur kernel size must be odd!', self.ImagePath)
         elif blur_kernel_size > 9:
             raise InvalidBlurArgumentsError('Blur kernel size cannot be greater than 9!', self.ImagePath)
         self.ImageData = cv.medianBlur(self.ImageData, blur_kernel_size)
@@ -383,7 +435,7 @@ Image Path : {self.ImagePath}
         if edge_detect:
             pass
         elif blur_kernel_size % 2 != 1:
-            raise InvalidBlurArgumentsError('Blur kernel size must be odd!', self.ImagePath, kernel_size_error=True)
+            raise InvalidKernelSizeError('Blur kernel size must be odd!', self.ImagePath)
         elif blur_kernel_size > 25:
             raise InvalidBlurArgumentsError('Blur kernel size cannot be greater than or equal to 25!', self.ImagePath)
         self.ImageData = cv.bilateralFilter(self.ImageData, blur_kernel_size, sigma_color, sigma_space)
@@ -410,7 +462,7 @@ Image Path : {self.ImagePath}
                 - constant : constant to be subtracted from each result
         '''
         if kernel_size % 2 != 1:
-            raise InvalidThresholdArgumentsError('Blur kernel size must be odd!', self.ImagePath)
+            raise InvalidKernelSizeError('Kernel size must be odd!', self.ImagePath)
         if kernel_size >= 45:
             raise InvalidThresholdArgumentsError('Size of neighborhood cannot be greater than or equal to 45!', self.ImagePath)
         else:
@@ -458,7 +510,7 @@ Image Path : {self.ImagePath}
         if not self.InvertedColor:
             raise InvalidDilateOrErodeArguments('Image must be inverted for dilate to work well!', self.ImagePath)
         elif kernel_size % 2 != 1:
-            raise InvalidDilateOrErodeArguments('Blur kernel size must be odd!', self.ImagePath)
+            raise InvalidKernelSizeError('Kernel size must be odd!', self.ImagePath)
         elif kernel_size > 9:
             raise InvalidDilateOrErodeArguments('Size of neighborhood cannot be greater than 9!', self.ImagePath)
         elif iterations >= 5:
@@ -481,7 +533,7 @@ Image Path : {self.ImagePath}
         if not self.InvertedColor:
             raise InvalidDilateOrErodeArguments('Image must be inverted for erode to work well!', self.ImagePath)
         elif kernel_size % 2 != 1:
-            raise InvalidDilateOrErodeArguments('Blur kernel size must be odd!', self.ImagePath)
+            raise InvalidKernelSizeError('Kernel size must be odd!', self.ImagePath)
         elif kernel_size > 9:
             raise InvalidDilateOrErodeArguments('Size of neighborhood cannot be greater than 9!', self.ImagePath)
         elif iterations >= 5:
@@ -502,7 +554,7 @@ Image Path : {self.ImagePath}
         if not self.InvertedColor:
             raise InvalidDilateOrErodeArguments('Image must be inverted for opening to work well!', self.ImagePath)
         elif kernel_size % 2 != 1:
-            raise InvalidDilateOrErodeArguments('Blur kernel size must be odd!', self.ImagePath)
+            raise InvalidKernelSizeError('Kernel size must be odd!', self.ImagePath)
         elif kernel_size > 9:
             raise InvalidDilateOrErodeArguments('Size of neighborhood cannot be greater than 9!', self.ImagePath)
         else:
@@ -521,7 +573,7 @@ Image Path : {self.ImagePath}
         if not self.InvertedColor:
             raise InvalidDilateOrErodeArguments('Image must be inverted for closing to work well!', self.ImagePath)
         elif kernel_size % 2 != 1:
-            raise InvalidDilateOrErodeArguments('Blur kernel size must be odd!', self.ImagePath)
+            raise InvalidKernelSizeError('Kernel size must be odd!', self.ImagePath)
         elif kernel_size > 9:
             raise InvalidDilateOrErodeArguments('Size of neighborhood cannot be greater than 9!', self.ImagePath)
         else:
@@ -530,7 +582,7 @@ Image Path : {self.ImagePath}
             return self.ImageData
         
     @add_transformation('laplacian filterting')
-    def laplacian_filter(self, kernel_size:int=3, desired_depth:int=-1, laplacian_scale:float=1, delta:int=0, border_type:str='default') -> MatLike:
+    def laplacian_filter(self, kernel_size:int=3, desired_depth:int=cv.CV_64F, laplacian_scale:float=1.0, delta:int=0, border_type:str='default') -> MatLike:
         '''
             FUNCTIONDOCSTRING
             Arguments:
@@ -546,8 +598,11 @@ Image Path : {self.ImagePath}
                 'reflect_101' : cv.BORDER_REFLECT_101,
                 'transparent' : cv.BORDER_TRANSPARENT,
         }
+        if kernel_size % 2 != 1:
+            raise InvalidKernelSizeError('Kernel size must be odd!', self.ImagePath)
         border_value = _border_types.get(border_type, cv.BORDER_DEFAULT)
         self.ImageData = cv.Laplacian(src=self.ImageData, ddepth=desired_depth, ksize=kernel_size, scale=laplacian_scale, delta=delta, borderType=border_value)
+        self.ImageData = np.uint8(self.ImageData)
         self.InvertedColor = True
         self.LaplacianData = True
         return self.ImageData
@@ -599,4 +654,17 @@ Image Path : {self.ImagePath}
                 rect_info.append(r_info)
                 cv.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
             cv.bitwise_and(self.ImageData, self.ImageData, mask=mask)
+        self.MaskRectInfo = rect_info
+        self.MaskRectScale = (self.ScaleX, self.ScaleY)
         return rect_info
+
+    @add_transformation('reset and add rectangles to original')
+    def reset_and_add_recangles(self) -> MatLike:
+        self.reset_image_data(retain_transformations=True)
+        rect_scale_x, rect_scale_y = self.MaskRectScale
+        self.enlarge_image(rect_scale_x, rect_scale_y)
+        buffer = int(self.ImageData.shape[1] * .006)
+        for rect in self.MaskRectInfo:
+            x, y, w, h = rect
+            cv.rectangle(self.ImageData, (x, y), (x + w + buffer*5, y + h + buffer), (255,255,255), -1)
+        return self.ImageData

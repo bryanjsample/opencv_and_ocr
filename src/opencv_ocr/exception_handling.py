@@ -33,15 +33,14 @@ class InvalidScaleArgumentsError(Exception):
 
 class InvalidBlurArgumentsError(Exception):
     '''Raised when the blur kernel size is greater than 9 (or 25 in a bilateral filter) or the sigma value of a gaussian blur is greater than 3'''
-    def __init__(self, error_message:str, image_to_process_path:str, kernel_size_error:bool=False) -> None:
+    def __init__(self, error_message:str, image_to_process_path:str) -> None:
         '''
             Raised when the blur kernel size is greater than 9 (or 25 in a bilateral filter) or the sigma value of a gaussian blur is greater than 3
             Arguments:
                 - error_message : string that contains \\n for each new line followed by desired whitespace. Ex : "Blur kernel size cannot be greater than or equal to 10!\\nAnything greater than 10 will result in an image quality that is too poor.\\nTypically a smaller value will produce better results."
                 - image_to_process_path : ImagePath property of ImageToProcess
         '''
-        if not kernel_size_error:
-            error_message += '\nAnything greater will result in an image quality that is too poor.\nTypically a smaller value will produce better results.'
+        error_message += '\nAnything greater will result in an image quality that is too poor.\nTypically a smaller value will produce better results.'
         formatted_error_message = format_exception_new_lines(self, error_message, image_to_process_path)
         super().__init__(formatted_error_message)
 
@@ -83,6 +82,29 @@ class TransformationFailedError(Exception):
         super().__init__(original_error_message + formatted_custom_error_message)
 
 class InvertedColorError(Exception):
+    ''''''
+    def __init__(self, error_message:str, image_to_process_path:str) -> None:
+        '''
+            FUNCTIONDOCSTRING
+            Arguments:
+                -
+        '''
+        formatted_error_message = format_exception_new_lines(self, error_message, image_to_process_path)
+        super().__init__(formatted_error_message)
+
+
+class GrayscaleError(Exception):
+    ''''''
+    def __init__(self, error_message:str, image_to_process_path:str) -> None:
+        '''
+            FUNCTIONDOCSTRING
+            Arguments:
+                -
+        '''
+        formatted_error_message = format_exception_new_lines(self, error_message, image_to_process_path)
+        super().__init__(formatted_error_message)
+
+class InvalidKernelSizeError(Exception):
     ''''''
     def __init__(self, error_message:str, image_to_process_path:str) -> None:
         '''
