@@ -25,9 +25,9 @@ def invert_colors_for_processing(processing_func:Callable) -> Callable:
         else:
             raise InvertedColorError(error_message='Something has gone wrong with the color inversion decorator. Run debugger for further information.', image_to_process_path=image_object.ImagePath)
         processing_func(image_object, *args, **kwargs)
-        if image_object.CannyData is True:
+        if image_object.CannyData is True or image_object.LaplacianData is True:
             pass
-        elif image_object.CannyData is False:
+        elif image_object.CannyData is False and image_object.LaplacianData is False:
             image_object.ImageData = cv.bitwise_not(image_object.ImageData)
             image_object.InvertedColor = False
         else:
@@ -65,6 +65,7 @@ class ImageToProcess():
         self._image_data:List[MatLike] = [cv.imread(image_path), cv.imread(image_path)]
         self._inverted_color:bool = False
         self._canny_data:bool = False
+        self._laplacian_data:bool = False
         self._transformations:Dict[int, Tuple[str, List[Tuple[Any]|Dict[str, Any]]]]|None = None
 
     @property
@@ -96,6 +97,13 @@ class ImageToProcess():
     @CannyData.setter
     def CannyData(self, bool_value:bool) -> None:
         self._canny_data = bool_value
+
+    @property
+    def LaplacianData(self) -> bool:
+        return self._laplacian_data
+    @LaplacianData.setter
+    def LaplacianData(self, bool_value:bool) -> None:
+        self._laplacian_data = bool_value
 
     @property
     def Transformations(self) -> Dict[int, Tuple[str, List[Tuple[Any]|Dict[str, Any]]]]|None:
@@ -239,6 +247,8 @@ Image Path : {self.ImagePath}
         self._image_data[0] = cv.imread(self.ImagePath)
         self.ImageData = cv.imread(self.ImagePath)
         self.InvertedColor = False
+        self.CannyData = False
+        self.LaplacianData = False
         self._transformations = None
 
     def display_image(self, title:str|None=None, image:MatLike|None=None) -> MatLike:
@@ -284,7 +294,25 @@ Image Path : {self.ImagePath}
 
     @add_transformation('convert to grayscale')
     def convert_to_grayscale(self) -> MatLike:
+        '''
+            FUNCTIONDOCSTRING
+            Arguments:
+                -
+        '''
         self.ImageData = cv.cvtColor(self.ImageData, cv.COLOR_BGR2GRAY)
+        return self.ImageData
+
+    @add_transformation('inverted colors')
+    def invert_color(self) -> MatLike:
+        '''
+            FUNCTIONDOCSTRING
+            Arguments:
+                -
+        '''
+        self.ImageData = cv.bitwise_not(self.ImageData)
+        self.InvertedColor = not self.InvertedColor
+        self.CannyData = False
+        self.LaplacianData = False
         return self.ImageData
 
     @add_transformation('standard blur')
@@ -499,6 +527,29 @@ Image Path : {self.ImagePath}
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
             self.ImageData = cv.morphologyEx(self.ImageData, cv.MORPH_CLOSE, kernel)
             return self.ImageData
+        
+    @add_transformation('laplacian filterting')
+    def laplacian_filter(self, kernel_size:int=3, desired_depth:int=-1, laplacian_scale:float=1, delta:int=0, border_type:str='default') -> MatLike:
+        '''
+            FUNCTIONDOCSTRING
+            Arguments:
+                -
+        '''
+        _border_types:dict[str, Any] = {
+                'default' : cv.BORDER_DEFAULT,
+                'constant' : cv.BORDER_CONSTANT,
+                'isolated' : cv.BORDER_ISOLATED,
+                'replicate' : cv.BORDER_REPLICATE,
+                'reflect' : cv.BORDER_REFLECT,
+                'wrap' : cv.BORDER_WRAP,
+                'reflect_101' : cv.BORDER_REFLECT_101,
+                'transparent' : cv.BORDER_TRANSPARENT,
+        }
+        border_value = _border_types.get(border_type, cv.BORDER_DEFAULT)
+        self.ImageData = cv.Laplacian(src=self.ImageData, ddepth=desired_depth, ksize=kernel_size, scale=laplacian_scale, delta=delta, borderType=border_value)
+        self.InvertedColor = True
+        self.LaplacianData = True
+        return self.ImageData
 
     @add_transformation('draw contours')
     def draw_contours(self, min_threshold:int=1_000, max_threshold:int=500_000, contour_method:str='tree', contour_mode:str='simple', filter:bool=True,) -> List[List[int]]:
@@ -515,22 +566,22 @@ Image Path : {self.ImagePath}
             '''
             filtered_contours = [contour for contour in image_contours if cv.contourArea(contour) > min_threshold and cv.contourArea(contour) < max_threshold]
             return filtered_contours
-        __methods:Dict[str, Any] = {
+        _methods:Dict[str, Any] = {
                 'external' : cv.RETR_EXTERNAL, # retrieves only external colors, disregarding any contours inside the objects
                 'list' : cv.RETR_LIST, # retrives all contours without any hierarchy
                 'ccomp' : cv.RETR_CCOMP, # retrieves all contours and organizes them into a two-level hierarchy. Top level contains the outer boundaries of the objects, and the second level contains the boundaries of the inner holes
                 'tree' : cv.RETR_TREE # retrives all the contours and reconstructs a full hierarchy of nestted contours
         }
-        __modes:Dict[str, Any] = {
+        _modes:Dict[str, Any] = {
                 'none' : cv.CHAIN_APPROX_NONE, # stores all contours points without approximating any of them
                 'simple' : cv.CHAIN_APPROX_SIMPLE, # compress horizontal, vertical, and diagonal segments and leaves only their endpoints. If a contour is straight, only the endpoints are stores
                 'tc89_li' : cv.CHAIN_APPROX_TC89_L1, # variant of douglas-peucker algorithm
                 'tc9_kcos' : cv.CHAIN_APPROX_TC89_KCOS  # variant of douglas-peucker algorithm
         }
-        __method = __methods.get(contour_method, cv.RETR_TREE)
-        __mode = __modes.get(contour_mode, cv.CHAIN_APPROX_SIMPLE)
-        print(f'{__method=}', f'{__mode=}', sep='\n\n')
-        contours = cv.findContours(self.ImageData, __method, __mode)[0]
+        _method = _methods.get(contour_method, cv.RETR_TREE)
+        _mode = _modes.get(contour_mode, cv.CHAIN_APPROX_SIMPLE)
+        print(f'{_method=}', f'{_mode=}', sep='\n\n')
+        contours = cv.findContours(self.ImageData, _method, _mode)[0]
         grayscale = cv.cvtColor(self.OriginalImageData, cv.COLOR_BGR2GRAY)
         mask = np.zeros_like(grayscale)
         if filter:

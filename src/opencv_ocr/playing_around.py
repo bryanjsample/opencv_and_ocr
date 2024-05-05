@@ -154,7 +154,7 @@ def mask_over_large_noise_inside_image_v3(path):
     group_text_by_block(d)
 
 def mask_over_v4(path):
-    image = ImageToProcess('blue_apron.png')
+    image = ImageToProcess(path)
     image.enlarge_image(2.5, 2.5)
     image.convert_to_grayscale()
     image.dilate(iterations=3)
@@ -166,5 +166,17 @@ def mask_over_v4(path):
     image.dilate()
     image.display_image()
 
+def mask_over_v5(path):
+    image = ImageToProcess(path)
+    image.enlarge_image(2, 2)
+    image.convert_to_grayscale()
+    image.gaussian_blur()
+    image.laplacian_filter()
+    image.close_pixels()
+    image.display_image()
+    image.invert_color()
+    image.close_pixels()
+    image.display_image()
+
 if __name__ == "__main__":
-    mask_over_v4('Blue_apron.png')
+    mask_over_v5('./images/blue_apron.png')
