@@ -232,13 +232,6 @@ Image Path : recipe_card.jpeg
     self.OriginalImageData.shape=(2263, 1780, 3)
     self.OriginalImageData.dtype=dtype('uint8')
 
-Transformations Performed:
-0 | shrink image                     | arguments : None | keywords : None                 
-1 | convert to grayscale             | arguments : None | keywords : None                 
-2 | bilateral filter blur            | arguments : None | keywords : None                 
-3 | otsu threshold                   | arguments : None | keywords : None                 
-4 | simple threshold                 | arguments : None | keywords : threshold_value = 175
-5 | close pixels (dilate then erode) | arguments : None | keywords : None 
         '''
         string_representation = f'''\
 Image Path : {self.ImagePath}
@@ -247,7 +240,15 @@ Image Path : {self.ImagePath}
     {self.OriginalImageData.shape=}
     {self.OriginalImageData.dtype=}
 
-{self.get_transformations_string()}
+    {self.OptimalScale=}
+    {self.ScaleX=}
+    {self.ScaleY=}
+    {self.Grayscale=}
+    {self.InvertedColor=}
+    {self.CannyData=}
+    {self.LaplacianData=}
+    {self.MaskRectInfo=}
+    {self.MaskRectScale=}
 '''
         return string_representation
 
