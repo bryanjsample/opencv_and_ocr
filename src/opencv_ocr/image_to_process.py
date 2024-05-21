@@ -26,6 +26,7 @@ class ImageToProcess():
         '''
         self._image_path:str = image_path
         self._image_data:List[MatLike] = [cv.imread(image_path), cv.imread(image_path)]
+        self._optimal_scale:float = 6000 / self.ImageData.shape[1]
         self._scale_x:float = 1.0
         self._scale_y:float = 1.0
         self._grayscale:bool = False
@@ -58,6 +59,10 @@ class ImageToProcess():
     @ScaleX.setter
     def ScaleX(self, new_scale:float) -> None:
         self._scale_x = new_scale
+
+    @property
+    def OptimalScale(self) -> float:
+        return self._optimal_scale
 
     @property
     def ScaleY(self) -> float:
@@ -249,6 +254,7 @@ Image Path : {self.ImagePath}
     def reset_image_data(self, retain_transformations:bool=False) -> None:
         self._image_data[0] = cv.imread(self.ImagePath)
         self.ImageData = cv.imread(self.ImagePath)
+        self._optimal_scale = 6000 / self.ImageData.shape[1]
         self.ScaleX = 1.0
         self.ScaleY = 1.0
         self.Grayscale = False
@@ -257,6 +263,14 @@ Image Path : {self.ImagePath}
         self.LaplacianData = False
         if not retain_transformations:
             self._transformations = None
+
+    def reset_mask_rectangles(self) -> None:
+        self.MaskRectInfo = None
+        self.MaskRectScale = None
+
+    def print_formatted_mask_rectangles(self) -> None:
+        for i in self.MaskRectInfo:
+            print(', '.join([str(x) for x in i]))
 
     def display_image(self, title:str|None=None, image:MatLike|None=None) -> MatLike:
         if title is None:
@@ -286,20 +300,22 @@ Image Path : {self.ImagePath}
             return self.ImageData
 
     @add_transformation('enlarge image')
-    def enlarge_image(self, scale_x:float=1.5, scale_y:float=1.5) -> MatLike:
+    def enlarge_image(self, scale_x:float|None=None, scale_y:float|None=None) -> MatLike:
         '''
             Enlarges an image to a scale between (0, 1) on the x and y axis. Recommended to input the same scale for x and y to maintain image integrity.
             Arguments:
                 - scale_x : scaling of the x axis, must not be less than or equal to 1.0
                 - scale_y : scaling of the y axis, must not be less than or equal to 1.0
         '''
-        if scale_x <= 1 or scale_y <= 1:
+        if scale_x is None or scale_y is None:
+            scale_x = self.OptimalScale
+            scale_y = self.OptimalScale
+        elif scale_x <= 1 or scale_y <= 1:
             raise InvalidScaleArgumentsError("Scale cannot be less than or equal to 1.0!", self.ImagePath)
-        else:
-            self.ImageData = cv.resize(self.ImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_CUBIC)
-            self._image_data[0] = cv.resize(self.OriginalImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_CUBIC)
-            self.ScaleX, self.ScaleY = scale_x, scale_y
-            return self.ImageData
+        self.ImageData = cv.resize(self.ImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_CUBIC)
+        self._image_data[0] = cv.resize(self.OriginalImageData, None, fx=scale_x, fy=scale_y, interpolation=cv.INTER_CUBIC)
+        self.ScaleX, self.ScaleY = scale_x, scale_y
+        return self.ImageData
 
     @add_transformation('convert to grayscale')
     def convert_to_grayscale(self) -> MatLike:
@@ -579,74 +595,4 @@ Image Path : {self.ImagePath}
         self.ImageData = np.uint8(self.ImageData)
         self.InvertedColor = True
         self.LaplacianData = True
-        return self.ImageData
-
-    @add_transformation('draw contours')
-    def draw_contours(self, min_threshold:int=1_000, max_threshold:int=500_000, contour_method:str='tree', contour_mode:str='simple', filter:bool=True,) -> List[List[int]]:
-        '''
-            FUNCTIONDOCSTRING
-            Arguments:
-                - min_threshold: minimum area of a contour to be included
-                - max_threshold :maximum area of a contour to be include
-                - contour_method : string correlating to a key in _methods dictionary
-                    - 'external' : cv.RETR_EXTERNAL | retrieves only external colors, disregarding any contours inside the objects
-                    - 'list' : cv.RETR_LIST | retrives all contours without any hierarchy
-                    - 'ccomp' : cv.RETR_CCOMP | retrieves all contours and organizes them into a two-level hierarchy. Top level contains the outer boundaries of the objects, and the second level contains the boundaries of the inner holes
-                    - 'tree' : cv.RETR_TREE | retrives all the contours and reconstructs a full hierarchy of nestted contours
-                - contour_mode : string correlating to a key in _modes dictionary
-                    - 'none' : cv.CHAIN_APPROX_NONE | stores all contours points without approximating any of them
-                    - 'simple' : cv.CHAIN_APPROX_SIMPLE | compress horizontal, vertical, and diagonal segments and leaves only their endpoints. If a contour is straight, only the endpoints are stores
-                    - 'tc89_li' : cv.CHAIN_APPROX_TC89_L1 | variant of douglas-peucker algorithm
-                    - 'tc9_kcos' : cv.CHAIN_APPROX_TC89_KCOS  | variant of douglas-peucker algorithm
-                - filter : boolean value to determine whether or not to filter contours based on threshold values
-        '''
-        def filter_contours(image_contours:List[MatLike]) -> List[MatLike]:
-            '''
-                FUNCTIONDOCSTRING
-                Arguments:
-                    - image_contours : list of all contours in the image
-            '''
-            filtered_contours = [contour for contour in image_contours if cv.contourArea(contour) > min_threshold and cv.contourArea(contour) < max_threshold]
-            return filtered_contours
-        _methods:Dict[str, Any] = {
-                'external' : cv.RETR_EXTERNAL, # retrieves only external colors, disregarding any contours inside the objects
-                'list' : cv.RETR_LIST, # retrives all contours without any hierarchy
-                'ccomp' : cv.RETR_CCOMP, # retrieves all contours and organizes them into a two-level hierarchy. Top level contains the outer boundaries of the objects, and the second level contains the boundaries of the inner holes
-                'tree' : cv.RETR_TREE # retrives all the contours and reconstructs a full hierarchy of nestted contours
-        }
-        _modes:Dict[str, Any] = {
-                'none' : cv.CHAIN_APPROX_NONE, # stores all contours points without approximating any of them
-                'simple' : cv.CHAIN_APPROX_SIMPLE, # compress horizontal, vertical, and diagonal segments and leaves only their endpoints. If a contour is straight, only the endpoints are stores
-                'tc89_li' : cv.CHAIN_APPROX_TC89_L1, # variant of douglas-peucker algorithm
-                'tc9_kcos' : cv.CHAIN_APPROX_TC89_KCOS  # variant of douglas-peucker algorithm
-        }
-        _method = _methods.get(contour_method, cv.RETR_TREE)
-        _mode = _modes.get(contour_mode, cv.CHAIN_APPROX_SIMPLE)
-        contours = cv.findContours(self.ImageData, _method, _mode)[0]
-        grayscale = cv.cvtColor(self.OriginalImageData, cv.COLOR_BGR2GRAY)
-        mask = np.zeros_like(grayscale)
-        if filter:
-            potential_images = filter_contours(contours)
-        else:
-            potential_images = contours
-        rect_info = []
-        for contour in potential_images:
-            x, y, w, h = cv.boundingRect(contour)
-            r_info = [x, y, w, h]
-            rect_info.append(r_info)
-            cv.rectangle(self.ImageData, (x, y), (x + w, y + h), 255, -1)
-            cv.bitwise_and(self.ImageData, self.ImageData, mask=mask)
-        self.MaskRectInfo = rect_info
-        self.MaskRectScale = (self.ScaleX, self.ScaleY)
-        return rect_info
-
-    @add_transformation('reset and add rectangles to original')
-    def reset_and_add_recangles(self) -> MatLike:
-        self.reset_image_data(retain_transformations=True)
-        rect_scale_x, rect_scale_y = self.MaskRectScale
-        self.enlarge_image(rect_scale_x, rect_scale_y)
-        buffer = int(self.ImageData.shape[1] * .006)
-        for rect in self.MaskRectInfo:
-            x, y, w, h = rect
-            cv.rectangle(self.ImageData, (x, y), (x + w + buffer*5, y + h + buffer), (255,255,255), -1)
         return self.ImageData
