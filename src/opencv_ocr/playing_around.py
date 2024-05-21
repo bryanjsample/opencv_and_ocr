@@ -35,7 +35,7 @@ def working_for_recipe_card_jpeg():
     test.bilateral_filter_blur(blur_kernel_size=1)
     test.otsu_threshold(230,255)
     test.display_image('processed with rects')
-    d = test.draw_text_box_outline()
+    d = test.draw_text_box_outline()[0]
     test.display_image('extracted text')
     groups = test.group_text_by_block(d)
     test.print_grouped_text(groups)
@@ -60,5 +60,5 @@ def mask_over_v6(path):
     # image.display_image()
 
 if __name__ == "__main__":
-    # working_for_recipe_card_jpeg()
-    mask_over_v6('./images/blue_apron.png')
+    working_for_recipe_card_jpeg()
+    # mask_over_v6('./images/blue_apron.png')
